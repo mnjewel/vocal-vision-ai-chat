@@ -8,6 +8,9 @@ import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
 import ModelSelector from './ModelSelector';
 import useChat from '@/hooks/useChat';
+import APIKeyInput from './APIKeyInput';
+import { hasOpenAIKey } from '@/integrations/openai/client';
+import { useAuthContext } from './AuthProvider';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -19,11 +22,13 @@ const ChatInterface: React.FC = () => {
   } = useChat();
   
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
+  const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasOpenAIKey());
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuthContext();
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -42,6 +47,12 @@ const ChatInterface: React.FC = () => {
   // Handle message submission
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
+    
+    if (!hasOpenAIKey()) {
+      setShowAPIKeyInput(true);
+      return;
+    }
+    
     if (inputMessage.trim() || uploadedImage) {
       sendMessage(inputMessage, uploadedImage?.url);
       setInputMessage('');
@@ -75,6 +86,14 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
+      {(!user || showAPIKeyInput) && (
+        <div className="mx-4 mt-4">
+          <APIKeyInput 
+            onKeySaved={() => setShowAPIKeyInput(false)} 
+          />
+        </div>
+      )}
+      
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
@@ -141,6 +160,7 @@ const ChatInterface: React.FC = () => {
               onKeyDown={handleKeyPress}
               className="flex-grow resize-none min-h-[44px] max-h-[200px]"
               rows={1}
+              disabled={!hasOpenAIKey() && !showAPIKeyInput}
             />
             
             <div className="flex flex-col gap-2">
@@ -149,7 +169,7 @@ const ChatInterface: React.FC = () => {
               <Button 
                 type="submit" 
                 size="icon" 
-                disabled={(!inputMessage.trim() && !uploadedImage) || isTyping}
+                disabled={(!inputMessage.trim() && !uploadedImage) || isTyping || (!hasOpenAIKey() && !showAPIKeyInput)}
               >
                 <Send className="h-4 w-4" />
               </Button>

@@ -1,5 +1,9 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/components/AuthProvider';
+import { createChatCompletion } from '@/integrations/openai/service';
+import { toast } from '@/components/ui/use-toast';
 
 // Define message types
 export type MessageRole = 'user' | 'assistant' | 'system';
@@ -22,23 +26,6 @@ export interface ChatSession {
   updatedAt: Date;
 }
 
-// Mock API response function - in a real app, this would be replaced with an actual API call
-const mockApiResponse = (userMessage: string): Promise<string> => {
-  return new Promise((resolve) => {
-    const responses = [
-      "I'm W3J Assistant, a modern AI helper. How can I assist you today?",
-      "That's an interesting question. Let me think about that for a moment...",
-      "Based on my knowledge, I can provide several insights on this topic.",
-      "I understand what you're asking. Here's what I know about that.",
-      "That's a great point! I'd like to add some additional context that might help.",
-    ];
-    
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    // Simulate streaming with a delay
-    setTimeout(() => resolve(randomResponse), 1500);
-  });
-};
-
 // Generate unique IDs for messages
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
@@ -50,6 +37,8 @@ export const useChat = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string>('');
   
+  const { user } = useAuthContext();
+
   // Initialize with a system message
   useEffect(() => {
     if (messages.length === 0) {
@@ -63,44 +52,107 @@ export const useChat = () => {
       ]);
     }
   }, []);
+
+  // Fetch user's chat sessions from database
+  useEffect(() => {
+    async function fetchSessions() {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data) {
+          const formattedSessions: ChatSession[] = data.map(session => ({
+            id: session.id,
+            title: session.title,
+            messages: [],
+            createdAt: new Date(session.created_at as string),
+            updatedAt: new Date(session.updated_at as string),
+          }));
+          setSessions(formattedSessions);
+        }
+      } catch (error) {
+        console.error('Error fetching chat sessions:', error);
+      }
+    }
+
+    fetchSessions();
+  }, [user]);
   
   // Create a new chat session
-  const createNewSession = useCallback(() => {
-    const newSessionId = generateId();
-    const newSession: ChatSession = {
-      id: newSessionId,
-      title: 'New Conversation',
-      messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    setSessions((prev) => [...prev, newSession]);
-    setCurrentSessionId(newSessionId);
-    setMessages([
-      {
-        id: generateId(),
-        role: 'system',
-        content: 'Welcome to W3J Assistant! How can I help you today?',
-        timestamp: new Date(),
-      },
-    ]);
-    
-    return newSessionId;
-  }, []);
+  const createNewSession = useCallback(async () => {
+    if (!user) return generateId();
+
+    try {
+      const newSessionId = generateId();
+      const newSession: ChatSession = {
+        id: newSessionId,
+        title: 'New Conversation',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Save to database
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .insert({
+          id: newSessionId,
+          user_id: user.id,
+          title: 'New Conversation',
+        })
+        .select();
+
+      if (error) throw error;
+      
+      if (data && data[0]) {
+        const dbSession = data[0];
+        newSession.id = dbSession.id;
+      }
+      
+      setSessions((prev) => [newSession, ...prev]);
+      setCurrentSessionId(newSession.id);
+      setMessages([
+        {
+          id: generateId(),
+          role: 'system',
+          content: 'Welcome to W3J Assistant! How can I help you today?',
+          timestamp: new Date(),
+        },
+      ]);
+      
+      return newSession.id;
+    } catch (error) {
+      console.error('Error creating new session:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to create new chat",
+        description: "Please try again later",
+      });
+      return null;
+    }
+  }, [user]);
   
   // Get current active session
   const getCurrentSession = useCallback(() => {
     if (!currentSessionId) {
-      const newSessionId = createNewSession();
-      return sessions.find(s => s.id === newSessionId) || null;
+      return null;
     }
     return sessions.find(s => s.id === currentSessionId) || null;
-  }, [currentSessionId, sessions, createNewSession]);
+  }, [currentSessionId, sessions]);
 
   // Send a message to the assistant
   const sendMessage = useCallback(async (content: string, imageUrl?: string) => {
     if (!content.trim() && !imageUrl) return;
+    
+    const currentSession = getCurrentSession() || await createNewSession();
+    if (!currentSession && !currentSessionId) return;
     
     // Add user message to the state
     const userMessageId = generateId();
@@ -118,35 +170,74 @@ export const useChat = () => {
     setIsTyping(true);
     
     try {
-      // In a real app, this would be a call to an AI service API
-      const response = await mockApiResponse(content);
+      // Save user message to database if user is authenticated
+      if (user) {
+        await supabase.from('messages').insert({
+          id: userMessageId,
+          session_id: currentSessionId,
+          role: 'user',
+          content: content,
+        });
+      }
+      
+      // Update session title if it's a new conversation
+      const session = getCurrentSession();
+      if (session?.title === 'New Conversation' && user) {
+        const truncatedTitle = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+        
+        await supabase
+          .from('chat_sessions')
+          .update({
+            title: truncatedTitle,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', currentSessionId);
+          
+        setSessions(prev => prev.map(s => 
+          s.id === currentSessionId 
+            ? { ...s, title: truncatedTitle, updatedAt: new Date() }
+            : s
+        ));
+      }
+      
+      // Get completion from OpenAI
+      const aiResponse = await createChatCompletion({
+        messages: messages
+          .filter(m => m.role !== 'system' || messages.indexOf(m) === 0) // Only include first system message
+          .concat([userMessage])
+          .map(m => ({ role: m.role, content: m.content })),
+        model: 'gpt-3.5-turbo',
+      });
       
       // Add assistant response to the state
       const assistantMessage: Message = {
         id: generateId(),
         role: 'assistant',
-        content: response,
+        content: aiResponse,
         timestamp: new Date(),
-        model: 'W3J-AI-Model',
+        model: 'gpt-3.5-turbo',
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
       
-      // Update session with the new messages
-      if (currentSessionId) {
-        setSessions((prev) =>
-          prev.map((session) =>
-            session.id === currentSessionId
-              ? {
-                  ...session,
-                  messages: [...session.messages, userMessage, assistantMessage],
-                  updatedAt: new Date(),
-                  title: session.title === 'New Conversation' ? content.substring(0, 30) : session.title,
-                }
-              : session
-          )
-        );
+      // Save assistant message to database if user is authenticated
+      if (user) {
+        await supabase.from('messages').insert({
+          id: assistantMessage.id,
+          session_id: currentSessionId,
+          role: 'assistant',
+          content: aiResponse,
+        });
       }
+      
+      // Update session
+      if (currentSessionId && user) {
+        await supabase
+          .from('chat_sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', currentSessionId);
+      }
+      
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -156,15 +247,21 @@ export const useChat = () => {
         {
           id: generateId(),
           role: 'system',
-          content: 'Sorry, there was an error processing your request. Please try again.',
+          content: 'Sorry, there was an error processing your request. Please check your API key and try again.',
           timestamp: new Date(),
         },
       ]);
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process your message",
+      });
     } finally {
       setIsTyping(false);
       setPendingMessage('');
     }
-  }, [currentSessionId]);
+  }, [currentSessionId, messages, user, createNewSession, getCurrentSession]);
 
   // Update message content while typing (for drafts)
   const updatePendingMessage = useCallback((content: string) => {
