@@ -1,4 +1,4 @@
-import { getOpenAIConfig, hasOpenAIKey } from './client';
+import { getOpenAIConfig, hasOpenAIKey, hasGroqKey } from './client';
 import { createGroqChatCompletion } from '../groq/service';
 
 interface Message {
@@ -25,12 +25,12 @@ const isGroqModel = (model: string): boolean => {
 };
 
 export async function createChatCompletion(params: ChatCompletionParams): Promise<string> {
-  if (!hasOpenAIKey()) {
-    throw new Error('API key not configured');
-  }
-  
   // Use Groq service for Groq models
   if (params.model && isGroqModel(params.model)) {
+    if (!hasGroqKey()) {
+      throw new Error('Groq API key not configured');
+    }
+    
     return createGroqChatCompletion({
       messages: params.messages,
       model: params.model,
@@ -40,6 +40,10 @@ export async function createChatCompletion(params: ChatCompletionParams): Promis
   }
   
   // Otherwise use OpenAI
+  if (!hasOpenAIKey()) {
+    throw new Error('OpenAI API key not configured');
+  }
+  
   const config = getOpenAIConfig();
   
   try {

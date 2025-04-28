@@ -1,5 +1,5 @@
 
-import { getOpenAIConfig } from '../openai/client';
+import { getGroqConfig, hasGroqKey } from '../openai/client';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -20,10 +20,10 @@ export const getAvailableGroqModels = () => [
 ];
 
 export async function createGroqChatCompletion(params: GroqCompletionParams): Promise<string> {
-  const config = getOpenAIConfig();
+  const config = getGroqConfig();
   
-  if (!config.apiKey) {
-    throw new Error('API key not configured');
+  if (!hasGroqKey()) {
+    throw new Error('Groq API key not configured');
   }
   
   try {

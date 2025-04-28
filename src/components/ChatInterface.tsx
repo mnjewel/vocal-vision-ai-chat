@@ -9,13 +9,14 @@ import FileUpload from './FileUpload';
 import ModelSelector from './ModelSelector';
 import useChat from '@/hooks/useChat';
 import APIKeyInput from './APIKeyInput';
-import { hasOpenAIKey, removeOpenAIKey } from '@/integrations/openai/client';
+import { hasOpenAIKey, removeOpenAIKey, hasGroqKey, removeGroqKey } from '@/integrations/openai/client';
 import { useAuthContext } from './AuthProvider';
 import { 
   Popover, 
   PopoverContent, 
   PopoverTrigger 
 } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ChatInterface: React.FC = () => {
   const {
@@ -29,7 +30,8 @@ const ChatInterface: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
-  const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasOpenAIKey());
+  const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasOpenAIKey() && !hasGroqKey());
+  const [activeAPITab, setActiveAPITab] = useState<string>('openai');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -49,17 +51,25 @@ const ChatInterface: React.FC = () => {
     }
   }, [inputMessage]);
 
+  // Check selected model type
+  useEffect(() => {
+    const isGroqModel = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(selectedModel);
+    setActiveAPITab(isGroqModel ? 'groq' : 'openai');
+  }, [selectedModel]);
+
   // Handle message submission
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    if (!hasOpenAIKey()) {
+    const isGroqModel = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(selectedModel);
+    
+    if ((isGroqModel && !hasGroqKey()) || (!isGroqModel && !hasOpenAIKey())) {
       setShowAPIKeyInput(true);
       return;
     }
     
     if (inputMessage.trim() || uploadedImage) {
-      sendMessage(inputMessage, uploadedImage?.url);
+      sendMessage(inputMessage, uploadedImage?.url, selectedModel);
       setInputMessage('');
       setUploadedImage(null);
       
@@ -100,8 +110,15 @@ const ChatInterface: React.FC = () => {
   };
   
   // Handle API key reset
-  const handleKeyReset = () => {
+  const handleResetOpenAIKey = () => {
     removeOpenAIKey();
+    setActiveAPITab('openai');
+    setShowAPIKeyInput(true);
+  };
+  
+  const handleResetGroqKey = () => {
+    removeGroqKey();
+    setActiveAPITab('groq');
     setShowAPIKeyInput(true);
   };
 
@@ -179,20 +196,36 @@ const ChatInterface: React.FC = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60">
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <h4 className="font-medium leading-none">Settings</h4>
                   <p className="text-sm text-muted-foreground">
                     Configure your chat assistant
                   </p>
-                  <div className="pt-2">
+                  <div className="space-y-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleKeyReset}
+                      onClick={handleResetOpenAIKey}
                       className="w-full"
                     >
-                      Reset API Key
+                      Reset OpenAI Key
                     </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResetGroqKey}
+                      className="w-full"
+                    >
+                      Reset Groq Key
+                    </Button>
+                    
+                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                      <p className="mb-1"><strong>Coming Soon:</strong></p>
+                      <p>• Web Search</p>
+                      <p>• Document Upload</p>
+                      <p>• Custom Instructions</p>
+                    </div>
                   </div>
                 </div>
               </PopoverContent>
@@ -208,7 +241,10 @@ const ChatInterface: React.FC = () => {
               onKeyDown={handleKeyPress}
               className="flex-grow resize-none min-h-[44px] max-h-[200px]"
               rows={1}
-              disabled={!hasOpenAIKey() && !showAPIKeyInput}
+              disabled={
+                (activeAPITab === 'openai' && !hasOpenAIKey() && !showAPIKeyInput) || 
+                (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
+              }
             />
             
             <div className="flex flex-col gap-2">
@@ -217,7 +253,12 @@ const ChatInterface: React.FC = () => {
               <Button 
                 type="submit" 
                 size="icon" 
-                disabled={(!inputMessage.trim() && !uploadedImage) || isTyping || (!hasOpenAIKey() && !showAPIKeyInput)}
+                disabled={
+                  (!inputMessage.trim() && !uploadedImage) || 
+                  isTyping || 
+                  (activeAPITab === 'openai' && !hasOpenAIKey() && !showAPIKeyInput) || 
+                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
+                }
               >
                 <Send className="h-4 w-4" />
               </Button>

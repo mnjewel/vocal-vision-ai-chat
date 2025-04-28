@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
 import { createChatCompletion } from '@/integrations/openai/service';
 import { toast } from '@/components/ui/use-toast';
+import { v4 as uuidv4 } from '@tanstack/react-query';
 
 // Define message types
 export type MessageRole = 'user' | 'assistant' | 'system';
@@ -27,7 +28,7 @@ export interface ChatSession {
 }
 
 // Generate unique IDs for messages
-const generateId = () => Math.random().toString(36).substring(2, 9);
+const generateId = () => uuidv4();
 
 // Hook for managing chat state and interactions
 export const useChat = () => {
@@ -89,7 +90,7 @@ export const useChat = () => {
   const createNewSession = useCallback(async () => {
     // For non-authenticated users, just create a client-side session ID
     if (!user) {
-      const newSessionId = generateId();
+      const newSessionId = uuidv4();
       const newSession: ChatSession = {
         id: newSessionId,
         title: 'New Conversation',
@@ -113,7 +114,7 @@ export const useChat = () => {
     }
 
     try {
-      const newSessionId = generateId();
+      const newSessionId = uuidv4();
       const newSession: ChatSession = {
         id: newSessionId,
         title: 'New Conversation',
@@ -174,7 +175,7 @@ export const useChat = () => {
   }, [currentSessionId, sessions]);
 
   // Send a message to the assistant
-  const sendMessage = useCallback(async (content: string, imageUrl?: string) => {
+  const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'gpt-3.5-turbo') => {
     if (!content.trim() && !imageUrl) return;
     
     try {
@@ -233,13 +234,13 @@ export const useChat = () => {
           ));
         }
         
-        // Get completion from OpenAI
+        // Get completion from API
         const aiResponse = await createChatCompletion({
           messages: messages
             .filter(m => m.role !== 'system' || messages.indexOf(m) === 0) // Only include first system message
             .concat([userMessage])
             .map(m => ({ role: m.role, content: m.content })),
-          model: 'gpt-3.5-turbo',
+          model: model,
         });
         
         // Add assistant response to the state
@@ -248,7 +249,7 @@ export const useChat = () => {
           role: 'assistant',
           content: aiResponse,
           timestamp: new Date(),
-          model: 'gpt-3.5-turbo',
+          model: model,
         };
         
         setMessages((prev) => [...prev, assistantMessage]);
@@ -260,6 +261,7 @@ export const useChat = () => {
             session_id: sessionId,
             role: 'assistant',
             content: aiResponse,
+            model: model,
           });
         }
         
