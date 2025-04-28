@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
 import { createChatCompletion } from '@/integrations/openai/service';
 import { toast } from '@/components/ui/use-toast';
-import { v4 as uuidv4 } from '@tanstack/react-query';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define message types
 export type MessageRole = 'user' | 'assistant' | 'system';
