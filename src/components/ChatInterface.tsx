@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,8 +7,7 @@ import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
 import ModelSelector from './ModelSelector';
 import useChat from '@/hooks/useChat';
-import APIKeyInput from './APIKeyInput';
-import { hasOpenAIKey, removeOpenAIKey, hasGroqKey, removeGroqKey } from '@/integrations/openai/client';
+import { hasGroqKey, removeGroqKey } from '@/integrations/groq/client';
 import { useAuthContext } from './AuthProvider';
 import { 
   Popover, 
@@ -19,6 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import SettingsDialog from './SettingsDialog';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -30,10 +30,11 @@ const ChatInterface: React.FC = () => {
   } = useChat();
   
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
+  const { showAgentTools, defaultModel } = useSettingsStore();
+  const [selectedModel, setSelectedModel] = useState(defaultModel);
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
-  const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasOpenAIKey() && !hasGroqKey());
-  const [activeAPITab, setActiveAPITab] = useState<string>('openai');
+  const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasGroqKey());
+  const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -90,7 +91,7 @@ const ChatInterface: React.FC = () => {
     
     const isGroqModel = groqModels.includes(selectedModel);
     
-    if ((isGroqModel && !hasGroqKey()) || (!isGroqModel && !hasOpenAIKey())) {
+    if ((isGroqModel && !hasGroqKey())) {
       setShowAPIKeyInput(true);
       return;
     }
@@ -137,11 +138,6 @@ const ChatInterface: React.FC = () => {
   };
   
   // Handle API key reset
-  const handleResetOpenAIKey = () => {
-    removeOpenAIKey();
-    setActiveAPITab('openai');
-    setShowAPIKeyInput(true);
-  };
   
   const handleResetGroqKey = () => {
     removeGroqKey();
@@ -153,9 +149,7 @@ const ChatInterface: React.FC = () => {
     <div className="flex flex-col h-full">
       {(!user || showAPIKeyInput) && (
         <div className="mx-4 mt-4">
-          <APIKeyInput 
-            onKeySaved={handleKeySaved} 
-          />
+          API Key Required
         </div>
       )}
       
@@ -230,7 +224,7 @@ const ChatInterface: React.FC = () => {
                 onSelectModel={handleModelChange}
               />
               
-              {isAgentic(selectedModel) && (
+              {isAgentic(selectedModel) && showAgentTools && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -253,51 +247,7 @@ const ChatInterface: React.FC = () => {
               )}
             </div>
             
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8">
-                  <Settings className="h-4 w-4" />
-                  <span className="sr-only">Settings</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60">
-                <div className="space-y-4">
-                  <h4 className="font-medium leading-none">Settings</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Configure your chat assistant
-                  </p>
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResetOpenAIKey}
-                      className="w-full"
-                    >
-                      Reset OpenAI Key
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResetGroqKey}
-                      className="w-full"
-                    >
-                      Reset Groq Key
-                    </Button>
-                    
-                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                      <p className="mb-1"><strong>Features Available:</strong></p>
-                      <p>• Web Search (with compound-beta models)</p>
-                      <p>• Code Execution (with compound-beta models)</p>
-                      <p>• File Upload</p>
-                      <p className="mt-1"><strong>Coming Soon:</strong></p>
-                      <p>• Document Upload</p>
-                      <p>• Custom Instructions</p>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <SettingsDialog />
           </div>
           
           <div className="flex gap-2">
@@ -310,7 +260,6 @@ const ChatInterface: React.FC = () => {
               className="flex-grow resize-none min-h-[44px] max-h-[200px]"
               rows={1}
               disabled={
-                (activeAPITab === 'openai' && !hasOpenAIKey() && !showAPIKeyInput) || 
                 (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
               }
             />
@@ -324,7 +273,6 @@ const ChatInterface: React.FC = () => {
                 disabled={
                   (!inputMessage.trim() && !uploadedImage) || 
                   isTyping || 
-                  (activeAPITab === 'openai' && !hasOpenAIKey() && !showAPIKeyInput) || 
                   (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
                 }
               >

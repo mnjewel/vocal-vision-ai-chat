@@ -1,12 +1,11 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
-import { createChatCompletion } from '@/integrations/openai/service';
+import { createChatCompletion } from '@/integrations/groq/service';
 import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useSettingsStore } from '@/stores/settingsStore';
 
-// Define message types
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface Message {
@@ -27,10 +26,8 @@ export interface ChatSession {
   updatedAt: Date;
 }
 
-// Generate unique IDs for messages
 const generateId = () => uuidv4();
 
-// Hook for managing chat state and interactions
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -39,8 +36,8 @@ export const useChat = () => {
   const [pendingMessage, setPendingMessage] = useState<string>('');
   
   const { user } = useAuthContext();
+  const { autoSaveMessages } = useSettingsStore();
 
-  // Initialize with a system message
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
@@ -54,7 +51,6 @@ export const useChat = () => {
     }
   }, []);
 
-  // Fetch user's chat sessions from database
   useEffect(() => {
     async function fetchSessions() {
       if (!user) return;
@@ -86,9 +82,7 @@ export const useChat = () => {
     fetchSessions();
   }, [user]);
   
-  // Create a new chat session
   const createNewSession = useCallback(async () => {
-    // For non-authenticated users, just create a client-side session ID
     if (!user) {
       const newSessionId = uuidv4();
       const newSession: ChatSession = {
@@ -123,7 +117,6 @@ export const useChat = () => {
         updatedAt: new Date(),
       };
       
-      // Save to database
       const { data, error } = await supabase
         .from('chat_sessions')
         .insert({
@@ -166,7 +159,6 @@ export const useChat = () => {
     }
   }, [user]);
   
-  // Get current active session
   const getCurrentSession = useCallback(() => {
     if (!currentSessionId) {
       return null;
@@ -174,12 +166,10 @@ export const useChat = () => {
     return sessions.find(s => s.id === currentSessionId) || null;
   }, [currentSessionId, sessions]);
 
-  // Send a message to the assistant
-  const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'gpt-3.5-turbo') => {
+  const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'llama-3.3-70b-versatile') => {
     if (!content.trim() && !imageUrl) return;
     
     try {
-      // Create a new session if none exists
       let sessionId = currentSessionId;
       if (!sessionId) {
         sessionId = await createNewSession();
@@ -188,7 +178,6 @@ export const useChat = () => {
         }
       }
       
-      // Add user message to the state
       const userMessageId = generateId();
       const userMessage: Message = {
         id: userMessageId,
@@ -200,30 +189,27 @@ export const useChat = () => {
       
       setMessages((prev) => [...prev, userMessage]);
       
-      // Show typing indicator
       setIsTyping(true);
       
       try {
-        // Save user message to database if user is authenticated
-        if (user) {
+        if (user && autoSaveMessages) {
           await supabase.from('messages').insert({
             id: userMessageId,
             session_id: sessionId,
             role: 'user',
-            content: content,
+            content: content
           });
         }
         
-        // Update session title if it's a new conversation
         const session = getCurrentSession();
-        if (session?.title === 'New Conversation' && user) {
+        if (session?.title === 'New Conversation' && user && autoSaveMessages) {
           const truncatedTitle = content.substring(0, 30) + (content.length > 30 ? '...' : '');
           
           await supabase
             .from('chat_sessions')
-            .update({
+            .update({ 
               title: truncatedTitle,
-              updated_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             })
             .eq('id', sessionId);
             
@@ -234,16 +220,14 @@ export const useChat = () => {
           ));
         }
         
-        // Get completion from API
         const aiResponse = await createChatCompletion({
           messages: messages
-            .filter(m => m.role !== 'system' || messages.indexOf(m) === 0) // Only include first system message
+            .filter(m => m.role !== 'system' || messages.indexOf(m) === 0)
             .concat([userMessage])
             .map(m => ({ role: m.role, content: m.content })),
           model: model,
         });
         
-        // Add assistant response to the state
         const assistantMessage: Message = {
           id: generateId(),
           role: 'assistant',
@@ -254,19 +238,17 @@ export const useChat = () => {
         
         setMessages((prev) => [...prev, assistantMessage]);
         
-        // Save assistant message to database if user is authenticated
-        if (user) {
+        if (user && autoSaveMessages) {
           await supabase.from('messages').insert({
             id: assistantMessage.id,
             session_id: sessionId,
             role: 'assistant',
             content: aiResponse,
-            model: model,
+            model: model
           });
         }
         
-        // Update session
-        if (sessionId && user) {
+        if (sessionId && user && autoSaveMessages) {
           await supabase
             .from('chat_sessions')
             .update({ updated_at: new Date().toISOString() })
@@ -280,7 +262,6 @@ export const useChat = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Add error message
       setMessages((prev) => [
         ...prev,
         {
@@ -300,9 +281,8 @@ export const useChat = () => {
       setIsTyping(false);
       setPendingMessage('');
     }
-  }, [currentSessionId, messages, user, createNewSession, getCurrentSession]);
+  }, [currentSessionId, messages, user, createNewSession, getCurrentSession, autoSaveMessages]);
 
-  // Update message content while typing (for drafts)
   const updatePendingMessage = useCallback((content: string) => {
     setPendingMessage(content);
   }, []);
