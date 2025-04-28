@@ -3,7 +3,18 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ChatSession } from '@/hooks/useChat';
-import { MessageSquare, User, Upload, Video, Settings, Search } from 'lucide-react';
+import { 
+  MessageSquare, 
+  User, 
+  Upload, 
+  Video, 
+  Settings, 
+  Search,
+  PlusCircle
+} from 'lucide-react';
+import { useAuthContext } from './AuthProvider';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,6 +33,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSessionSelect,
   onNewSession,
 }) => {
+  const { user, signOut } = useAuthContext();
+  const navigate = useNavigate();
+
+  const handleFeatureClick = (feature: string) => {
+    toast({
+      title: `${feature} Feature`,
+      description: `The ${feature.toLowerCase()} feature is coming soon!`,
+    });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div
       className={`fixed inset-y-0 left-0 w-72 bg-sidebar transition-transform transform z-20 
@@ -51,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           className="m-2 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
           onClick={onNewSession}
         >
-          <MessageSquare className="mr-2 h-4 w-4" /> New Chat
+          <PlusCircle className="mr-2 h-4 w-4" /> New Chat
         </Button>
         
         <div className="px-2 py-4">
@@ -59,19 +89,39 @@ const Sidebar: React.FC<SidebarProps> = ({
             FEATURES
           </h2>
           <div className="space-y-1">
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
-              <User className="mr-2 h-4 w-4" /> Chat
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => navigate('/')}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" /> Chat
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => handleFeatureClick('File Upload')}
+            >
               <Upload className="mr-2 h-4 w-4" /> File Upload
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => handleFeatureClick('Video Chat')}
+            >
               <Video className="mr-2 h-4 w-4" /> Video Chat
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => handleFeatureClick('Web Search')}
+            >
               <Search className="mr-2 h-4 w-4" /> Web Search
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => handleFeatureClick('Settings')}
+            >
               <Settings className="mr-2 h-4 w-4" /> Settings
             </Button>
           </div>
@@ -108,8 +158,19 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center">
                 <User className="h-4 w-4" />
               </div>
-              <span className="ml-2 text-sm">Guest User</span>
+              <span className="ml-2 text-sm">{user ? user.email : 'Guest User'}</span>
             </div>
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleSignOut}
+                className="h-8 w-8"
+                title="Sign Out"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              </Button>
+            )}
           </div>
         </div>
       </div>

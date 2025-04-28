@@ -87,7 +87,30 @@ export const useChat = () => {
   
   // Create a new chat session
   const createNewSession = useCallback(async () => {
-    if (!user) return generateId();
+    // For non-authenticated users, just create a client-side session ID
+    if (!user) {
+      const newSessionId = generateId();
+      const newSession: ChatSession = {
+        id: newSessionId,
+        title: 'New Conversation',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      setSessions((prev) => [newSession, ...prev]);
+      setCurrentSessionId(newSessionId);
+      setMessages([
+        {
+          id: generateId(),
+          role: 'system',
+          content: 'Welcome to W3J Assistant! How can I help you today?',
+          timestamp: new Date(),
+        },
+      ]);
+      
+      return newSessionId;
+    }
 
     try {
       const newSessionId = generateId();
@@ -109,7 +132,10 @@ export const useChat = () => {
         })
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error creating session:', error);
+        throw error;
+      }
       
       if (data && data[0]) {
         const dbSession = data[0];
@@ -151,91 +177,102 @@ export const useChat = () => {
   const sendMessage = useCallback(async (content: string, imageUrl?: string) => {
     if (!content.trim() && !imageUrl) return;
     
-    const currentSession = getCurrentSession() || await createNewSession();
-    if (!currentSession && !currentSessionId) return;
-    
-    // Add user message to the state
-    const userMessageId = generateId();
-    const userMessage: Message = {
-      id: userMessageId,
-      role: 'user',
-      content,
-      timestamp: new Date(),
-      imageUrl,
-    };
-    
-    setMessages((prev) => [...prev, userMessage]);
-    
-    // Show typing indicator
-    setIsTyping(true);
-    
     try {
-      // Save user message to database if user is authenticated
-      if (user) {
-        await supabase.from('messages').insert({
-          id: userMessageId,
-          session_id: currentSessionId,
-          role: 'user',
-          content: content,
-        });
+      // Create a new session if none exists
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        sessionId = await createNewSession();
+        if (!sessionId) {
+          throw new Error("Failed to create session");
+        }
       }
       
-      // Update session title if it's a new conversation
-      const session = getCurrentSession();
-      if (session?.title === 'New Conversation' && user) {
-        const truncatedTitle = content.substring(0, 30) + (content.length > 30 ? '...' : '');
-        
-        await supabase
-          .from('chat_sessions')
-          .update({
-            title: truncatedTitle,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', currentSessionId);
-          
-        setSessions(prev => prev.map(s => 
-          s.id === currentSessionId 
-            ? { ...s, title: truncatedTitle, updatedAt: new Date() }
-            : s
-        ));
-      }
-      
-      // Get completion from OpenAI
-      const aiResponse = await createChatCompletion({
-        messages: messages
-          .filter(m => m.role !== 'system' || messages.indexOf(m) === 0) // Only include first system message
-          .concat([userMessage])
-          .map(m => ({ role: m.role, content: m.content })),
-        model: 'gpt-3.5-turbo',
-      });
-      
-      // Add assistant response to the state
-      const assistantMessage: Message = {
-        id: generateId(),
-        role: 'assistant',
-        content: aiResponse,
+      // Add user message to the state
+      const userMessageId = generateId();
+      const userMessage: Message = {
+        id: userMessageId,
+        role: 'user',
+        content,
         timestamp: new Date(),
-        model: 'gpt-3.5-turbo',
+        imageUrl,
       };
       
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, userMessage]);
       
-      // Save assistant message to database if user is authenticated
-      if (user) {
-        await supabase.from('messages').insert({
-          id: assistantMessage.id,
-          session_id: currentSessionId,
+      // Show typing indicator
+      setIsTyping(true);
+      
+      try {
+        // Save user message to database if user is authenticated
+        if (user) {
+          await supabase.from('messages').insert({
+            id: userMessageId,
+            session_id: sessionId,
+            role: 'user',
+            content: content,
+          });
+        }
+        
+        // Update session title if it's a new conversation
+        const session = getCurrentSession();
+        if (session?.title === 'New Conversation' && user) {
+          const truncatedTitle = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+          
+          await supabase
+            .from('chat_sessions')
+            .update({
+              title: truncatedTitle,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', sessionId);
+            
+          setSessions(prev => prev.map(s => 
+            s.id === sessionId 
+              ? { ...s, title: truncatedTitle, updatedAt: new Date() }
+              : s
+          ));
+        }
+        
+        // Get completion from OpenAI
+        const aiResponse = await createChatCompletion({
+          messages: messages
+            .filter(m => m.role !== 'system' || messages.indexOf(m) === 0) // Only include first system message
+            .concat([userMessage])
+            .map(m => ({ role: m.role, content: m.content })),
+          model: 'gpt-3.5-turbo',
+        });
+        
+        // Add assistant response to the state
+        const assistantMessage: Message = {
+          id: generateId(),
           role: 'assistant',
           content: aiResponse,
-        });
-      }
-      
-      // Update session
-      if (currentSessionId && user) {
-        await supabase
-          .from('chat_sessions')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', currentSessionId);
+          timestamp: new Date(),
+          model: 'gpt-3.5-turbo',
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Save assistant message to database if user is authenticated
+        if (user) {
+          await supabase.from('messages').insert({
+            id: assistantMessage.id,
+            session_id: sessionId,
+            role: 'assistant',
+            content: aiResponse,
+          });
+        }
+        
+        // Update session
+        if (sessionId && user) {
+          await supabase
+            .from('chat_sessions')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', sessionId);
+        }
+      } catch (error) {
+        console.error('Error in chat processing:', error);
+        throw error;
       }
       
     } catch (error) {

@@ -2,15 +2,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
+import { Send, Settings } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
 import ModelSelector from './ModelSelector';
 import useChat from '@/hooks/useChat';
 import APIKeyInput from './APIKeyInput';
-import { hasOpenAIKey } from '@/integrations/openai/client';
+import { hasOpenAIKey, removeOpenAIKey } from '@/integrations/openai/client';
 import { useAuthContext } from './AuthProvider';
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from '@/components/ui/popover';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -83,13 +88,29 @@ const ChatInterface: React.FC = () => {
     setInputMessage(transcript);
     setTimeout(() => handleSubmit(), 500);
   };
+  
+  // Handle model change
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+  };
+  
+  // Handle API key saved
+  const handleKeySaved = () => {
+    setShowAPIKeyInput(false);
+  };
+  
+  // Handle API key reset
+  const handleKeyReset = () => {
+    removeOpenAIKey();
+    setShowAPIKeyInput(true);
+  };
 
   return (
     <div className="flex flex-col h-full">
       {(!user || showAPIKeyInput) && (
         <div className="mx-4 mt-4">
           <APIKeyInput 
-            onKeySaved={() => setShowAPIKeyInput(false)} 
+            onKeySaved={handleKeySaved} 
           />
         </div>
       )}
@@ -144,11 +165,38 @@ const ChatInterface: React.FC = () => {
       
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center justify-between">
             <ModelSelector 
               selectedModel={selectedModel}
-              onSelectModel={setSelectedModel}
+              onSelectModel={handleModelChange}
             />
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Settings className="h-4 w-4" />
+                  <span className="sr-only">Settings</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Settings</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Configure your chat assistant
+                  </p>
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleKeyReset}
+                      className="w-full"
+                    >
+                      Reset API Key
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           
           <div className="flex gap-2">

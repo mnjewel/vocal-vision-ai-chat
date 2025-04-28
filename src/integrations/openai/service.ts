@@ -1,5 +1,5 @@
-
 import { getOpenAIConfig, hasOpenAIKey } from './client';
+import { createGroqChatCompletion } from '../groq/service';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -19,11 +19,27 @@ export const getAvailableModels = () => [
   { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
 ];
 
+// Helper to check if a model is from Groq
+const isGroqModel = (model: string): boolean => {
+  return ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(model);
+};
+
 export async function createChatCompletion(params: ChatCompletionParams): Promise<string> {
   if (!hasOpenAIKey()) {
-    throw new Error('OpenAI API key not configured');
+    throw new Error('API key not configured');
   }
   
+  // Use Groq service for Groq models
+  if (params.model && isGroqModel(params.model)) {
+    return createGroqChatCompletion({
+      messages: params.messages,
+      model: params.model,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens
+    });
+  }
+  
+  // Otherwise use OpenAI
   const config = getOpenAIConfig();
   
   try {

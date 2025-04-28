@@ -1,40 +1,54 @@
-
-import React from 'react';
-import { 
+import { useState } from 'react';
+import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
-  SelectValue 
+  SelectValue,
 } from '@/components/ui/select';
+import { getAvailableModels } from '@/integrations/openai/service';
+import { getAvailableGroqModels } from '@/integrations/groq/service';
 
 interface ModelSelectorProps {
   selectedModel: string;
   onSelectModel: (model: string) => void;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onSelectModel }) => {
-  const models = [
-    { id: 'gpt-4o', name: 'GPT-4o' },
-    { id: 'gpt-4', name: 'GPT-4' },
-    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
-    { id: 'claude-3-opus', name: 'Claude 3 Opus' },
-    { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet' },
-    { id: 'gemini-pro', name: 'Gemini Pro' },
-    { id: 'llama-3-70b', name: 'Llama 3 70B' },
-  ];
+const ModelSelector: React.FC<ModelSelectorProps> = ({
+  selectedModel,
+  onSelectModel,
+}) => {
+  const openaiModels = getAvailableModels();
+  const groqModels = getAvailableGroqModels();
+  
+  const handleModelChange = (value: string) => {
+    onSelectModel(value);
+  };
 
   return (
-    <Select value={selectedModel} onValueChange={onSelectModel}>
-      <SelectTrigger className="w-[180px] h-9">
+    <Select value={selectedModel} onValueChange={handleModelChange}>
+      <SelectTrigger className="w-[180px] h-8">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent>
-        {models.map((model) => (
-          <SelectItem key={model.id} value={model.id}>
-            {model.name}
-          </SelectItem>
-        ))}
+        <SelectGroup>
+          <SelectLabel>OpenAI Models</SelectLabel>
+          {openaiModels.map((model) => (
+            <SelectItem key={model.id} value={model.id}>
+              {model.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+        <SelectGroup>
+          <SelectLabel>Groq Models</SelectLabel>
+          {groqModels.map((model) => (
+            <SelectItem key={model.id} value={model.id}>
+              {model.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );

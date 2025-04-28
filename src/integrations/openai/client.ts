@@ -9,7 +9,8 @@ const getOpenAIKey = (): string => {
 };
 
 export const hasOpenAIKey = (): boolean => {
-  return !!getOpenAIKey();
+  const key = getOpenAIKey();
+  return key !== null && key !== '';
 };
 
 export const getOpenAIConfig = () => {
@@ -21,4 +22,8 @@ export const getOpenAIConfig = () => {
 
 export const saveOpenAIKey = (key: string): void => {
   localStorage.setItem('openai_api_key', key);
+};
+
+export const removeOpenAIKey = (): void => {
+  localStorage.removeItem('openai_api_key');
 };
