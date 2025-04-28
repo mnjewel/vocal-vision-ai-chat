@@ -53,12 +53,29 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             </SelectItem>
           ))}
         </SelectGroup>
+        
         <SelectGroup>
           <SelectLabel className="flex items-center justify-between mt-2">
-            <span>Groq Models</span>
+            <span>Groq Standard Models</span>
             {!hasGroq && <span className="text-xs text-amber-500">(Key required)</span>}
           </SelectLabel>
-          {groqModels.map((model) => (
+          {groqModels.filter(model => !['compound-beta', 'compound-beta-mini'].includes(model.id)).map((model) => (
+            <SelectItem 
+              key={model.id} 
+              value={model.id}
+              disabled={!hasGroq}
+            >
+              {model.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+        
+        <SelectGroup>
+          <SelectLabel className="flex items-center justify-between mt-2">
+            <span>Groq Agentic Models</span>
+            {!hasGroq && <span className="text-xs text-amber-500">(Key required)</span>}
+          </SelectLabel>
+          {groqModels.filter(model => ['compound-beta', 'compound-beta-mini'].includes(model.id)).map((model) => (
             <SelectItem 
               key={model.id} 
               value={model.id}

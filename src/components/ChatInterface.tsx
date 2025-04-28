@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Settings } from 'lucide-react';
+import { Send, Settings, Search, Code } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
@@ -17,6 +17,8 @@ import {
   PopoverTrigger 
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -53,15 +55,40 @@ const ChatInterface: React.FC = () => {
 
   // Check selected model type
   useEffect(() => {
-    const isGroqModel = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(selectedModel);
-    setActiveAPITab(isGroqModel ? 'groq' : 'openai');
+    const groqModels = [
+      'llama3-8b-8192', 
+      'llama3-70b-8192',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'gemma2-9b-it',
+      'deepseek-r1-distill-llama-70b',
+      'compound-beta',
+      'compound-beta-mini'
+    ];
+    setActiveAPITab(groqModels.includes(selectedModel) ? 'groq' : 'openai');
   }, [selectedModel]);
+
+  // Check if selected model is agentic
+  const isAgentic = (model: string): boolean => {
+    return ['compound-beta', 'compound-beta-mini'].includes(model);
+  };
 
   // Handle message submission
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    const isGroqModel = ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(selectedModel);
+    const groqModels = [
+      'llama3-8b-8192', 
+      'llama3-70b-8192',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'gemma2-9b-it',
+      'deepseek-r1-distill-llama-70b',
+      'compound-beta',
+      'compound-beta-mini'
+    ];
+    
+    const isGroqModel = groqModels.includes(selectedModel);
     
     if ((isGroqModel && !hasGroqKey()) || (!isGroqModel && !hasOpenAIKey())) {
       setShowAPIKeyInput(true);
@@ -132,6 +159,20 @@ const ChatInterface: React.FC = () => {
         </div>
       )}
       
+      {isAgentic(selectedModel) && hasGroqKey() && (
+        <div className="mx-4 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center space-x-2 mb-2">
+            <Search className="h-4 w-4 text-amber-600" />
+            <Code className="h-4 w-4 text-amber-600" />
+            <span className="font-medium text-amber-800">Agentic Assistant Enabled</span>
+          </div>
+          <p className="text-sm text-amber-700">
+            This model can search the web and execute code to answer your questions.
+            Try asking about current events, weather, calculations, or code examples.
+          </p>
+        </div>
+      )}
+      
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
@@ -183,10 +224,34 @@ const ChatInterface: React.FC = () => {
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <div className="flex gap-2 items-center justify-between">
-            <ModelSelector 
-              selectedModel={selectedModel}
-              onSelectModel={handleModelChange}
-            />
+            <div className="flex items-center gap-2">
+              <ModelSelector 
+                selectedModel={selectedModel}
+                onSelectModel={handleModelChange}
+              />
+              
+              {isAgentic(selectedModel) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex gap-1">
+                        <Badge variant="outline" className="bg-blue-50">
+                          <Search className="h-3 w-3 mr-1" />
+                          Web
+                        </Badge>
+                        <Badge variant="outline" className="bg-green-50">
+                          <Code className="h-3 w-3 mr-1" />
+                          Code
+                        </Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This model can search the web and run code</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             
             <Popover>
               <PopoverTrigger asChild>
@@ -221,8 +286,11 @@ const ChatInterface: React.FC = () => {
                     </Button>
                     
                     <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                      <p className="mb-1"><strong>Coming Soon:</strong></p>
-                      <p>• Web Search</p>
+                      <p className="mb-1"><strong>Features Available:</strong></p>
+                      <p>• Web Search (with compound-beta models)</p>
+                      <p>• Code Execution (with compound-beta models)</p>
+                      <p>• File Upload</p>
+                      <p className="mt-1"><strong>Coming Soon:</strong></p>
                       <p>• Document Upload</p>
                       <p>• Custom Instructions</p>
                     </div>

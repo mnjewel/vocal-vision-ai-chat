@@ -6,6 +6,12 @@ interface Message {
   content: string;
 }
 
+export interface ExecutedTool {
+  name: string;
+  input: any;
+  output: any;
+}
+
 export interface GroqCompletionParams {
   messages: Message[];
   model?: string;
@@ -13,13 +19,27 @@ export interface GroqCompletionParams {
   maxTokens?: number;
 }
 
+export interface GroqCompletionResult {
+  content: string;
+  executedTools?: ExecutedTool[];
+}
+
+// Updated model list based on Groq's documentation
 export const getAvailableGroqModels = () => [
-  { id: 'llama3-8b-8192', name: 'Llama-3 8B' },
-  { id: 'llama3-70b-8192', name: 'Llama-3 70B' },
-  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
+  // Production Models
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile (128K)' },
+  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant (128K)' },
+  { id: 'gemma2-9b-it', name: 'Gemma 2 9B' },
+  { id: 'llama3-70b-8192', name: 'Llama 3 70B (8K)' },
+  { id: 'llama3-8b-8192', name: 'Llama 3 8B (8K)' },
+  // Preview Models
+  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 Distill Llama 70B (128K)' },
+  // Agentic Models (Systems)
+  { id: 'compound-beta', name: 'Compound Beta (Web Search & Code)' },
+  { id: 'compound-beta-mini', name: 'Compound Beta Mini (Fast)' },
 ];
 
-export async function createGroqChatCompletion(params: GroqCompletionParams): Promise<string> {
+export async function createGroqChatCompletion(params: GroqCompletionParams): Promise<GroqCompletionResult> {
   const config = getGroqConfig();
   
   if (!hasGroqKey()) {
@@ -34,7 +54,7 @@ export async function createGroqChatCompletion(params: GroqCompletionParams): Pr
         'Authorization': `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
-        model: params.model || 'llama3-8b-8192',
+        model: params.model || 'llama-3.1-8b-instant',
         messages: params.messages,
         temperature: params.temperature || 0.7,
         max_tokens: params.maxTokens || 1000,
@@ -47,9 +67,50 @@ export async function createGroqChatCompletion(params: GroqCompletionParams): Pr
     }
     
     const data = await response.json();
-    return data.choices[0].message.content;
+    
+    // Extract executed tools if available (for agentic models)
+    const executedTools = data.choices[0].message.executed_tools;
+    
+    return {
+      content: data.choices[0].message.content,
+      executedTools: executedTools || undefined
+    };
   } catch (error) {
     console.error('Error calling Groq API:', error);
+    throw error;
+  }
+}
+
+// Add support for Groq's whisper models
+export async function transcribeAudioGroq(audioBlob: Blob): Promise<string> {
+  const config = getGroqConfig();
+  
+  if (!hasGroqKey()) {
+    throw new Error('Groq API key not configured');
+  }
+  
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'audio.webm');
+  formData.append('model', 'whisper-large-v3');
+  
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to transcribe audio with Groq');
+    }
+    
+    const data = await response.json();
+    return data.text;
+  } catch (error) {
+    console.error('Error transcribing audio with Groq:', error);
     throw error;
   }
 }

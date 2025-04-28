@@ -8,7 +8,7 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { role, content, timestamp, imageUrl, pending } = message;
+  const { role, content, timestamp, imageUrl, pending, model } = message;
   
   const getMessageClass = () => {
     if (role === 'user') return 'message-user';
@@ -53,6 +53,48 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       minute: 'numeric',
     }).format(date);
   };
+  
+  // Format content with proper markdown and code blocks
+  const formatContent = () => {
+    if (!content) return '';
+    
+    // This is a very simple formatting implementation
+    // Replace code blocks with styled pre elements
+    const withCodeBlocks = content.replace(
+      /```(\w+)?([\s\S]*?)```/g, 
+      '<pre class="bg-gray-800 text-white p-3 rounded-md my-2 overflow-x-auto">$2</pre>'
+    );
+    
+    // Replace headings (##, ###)
+    const withHeadings = withCodeBlocks
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-3 mb-1">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>');
+    
+    // Replace bullet points
+    const withBullets = withHeadings
+      .replace(/^\* (.*$)/gm, '<li class="ml-4">• $1</li>')
+      .replace(/^- (.*$)/gm, '<li class="ml-4">• $1</li>');
+      
+    // Replace numbered lists
+    const withNumberedLists = withBullets
+      .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 list-decimal">$1</li>');
+    
+    // Replace bold text
+    const withBold = withNumberedLists
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<strong>$1</strong>');
+    
+    // Replace italic text
+    const withItalic = withBold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/_(.*?)_/g, '<em>$1</em>');
+    
+    // Replace paragraphs with proper spacing
+    return withItalic
+      .split('\n\n')
+      .map(paragraph => `<div class="mb-3">${paragraph}</div>`)
+      .join('');
+  };
 
   return (
     <div className={`p-4 mb-2 rounded-md animate-message-appear ${getMessageClass()}`}>
@@ -70,6 +112,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             <span className="text-xs text-gray-500">
               {formatTimestamp(timestamp)}
             </span>
+            {model && (
+              <span className="text-xs bg-gray-100 text-gray-700 px-1 py-0.5 rounded ml-2">
+                {model}
+              </span>
+            )}
           </div>
           <div className={pending ? 'opacity-70' : ''}>
             {imageUrl && (
@@ -81,9 +128,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 />
               </div>
             )}
-            <div className={`prose max-w-none dark:prose-invert ${pending ? 'typing-indicator' : ''}`}>
-              {content}
-            </div>
+            <div 
+              className={`prose max-w-none dark:prose-invert ${pending ? 'typing-indicator' : ''}`}
+              dangerouslySetInnerHTML={{ __html: formatContent() }}
+            />
           </div>
         </div>
       </div>

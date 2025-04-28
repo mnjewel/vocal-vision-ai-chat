@@ -21,7 +21,22 @@ export const getAvailableModels = () => [
 
 // Helper to check if a model is from Groq
 const isGroqModel = (model: string): boolean => {
-  return ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768'].includes(model);
+  const groqModels = [
+    'llama3-8b-8192', 
+    'llama3-70b-8192', 
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'gemma2-9b-it',
+    'deepseek-r1-distill-llama-70b',
+    'compound-beta',
+    'compound-beta-mini'
+  ];
+  return groqModels.includes(model);
+};
+
+// Helper to check if a model is an agentic model
+const isAgentic = (model: string): boolean => {
+  return ['compound-beta', 'compound-beta-mini'].includes(model);
 };
 
 export async function createChatCompletion(params: ChatCompletionParams): Promise<string> {
@@ -31,12 +46,23 @@ export async function createChatCompletion(params: ChatCompletionParams): Promis
       throw new Error('Groq API key not configured');
     }
     
-    return createGroqChatCompletion({
+    const result = await createGroqChatCompletion({
       messages: params.messages,
       model: params.model,
       temperature: params.temperature,
       maxTokens: params.maxTokens
     });
+    
+    // For agentic models, we could include information about the tools that were used
+    if (isAgentic(params.model) && result.executedTools && result.executedTools.length > 0) {
+      let toolsInfo = "\n\n---\n*Tools used:*\n";
+      result.executedTools.forEach((tool, index) => {
+        toolsInfo += `${index + 1}. ${tool.name}: ${JSON.stringify(tool.input)}\n`;
+      });
+      return result.content + toolsInfo;
+    }
+    
+    return result.content;
   }
   
   // Otherwise use OpenAI
