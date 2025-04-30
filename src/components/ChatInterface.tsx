@@ -88,9 +88,7 @@ const ChatInterface: React.FC = () => {
       const availablePersonas = ModelManager.getAvailablePersonasForModel(model);
       if (availablePersonas.length > 0) {
         setActivePersona(availablePersonas[0].id);
-        toast({
-          description: `Switched to ${availablePersonas[0].name} persona to match selected model capabilities`,
-        });
+        toast.info(`Switched to ${availablePersonas[0].name} persona to match selected model capabilities`);
       }
     }
   };
@@ -145,9 +143,7 @@ const ChatInterface: React.FC = () => {
 
     const persona = getAvailablePersonas().find(p => p.id === personaId);
     if (persona) {
-      toast({
-        description: `Switched to ${persona.name} persona`,
-      });
+      toast.info(`Switched to ${persona.name} persona`);
     }
   };
 
