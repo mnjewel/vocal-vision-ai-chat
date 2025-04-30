@@ -1,0 +1,293 @@
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/components/AuthProvider';
+import { createGroqChatCompletion } from '@/integrations/groq/service';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { ModelManager } from '@/services/ModelManager';
+import { MemoryManager } from '@/services/MemoryManager';
+import { Message, MessageRole } from '@/types/chat';
+
+const generateId = () => uuidv4();
+
+interface UseMessagesProps {
+  memoryManager: MemoryManager | null;
+  currentSessionId: string | null;
+  createNewSession: () => Promise<string | null>;
+  activePersona: string;
+}
+
+export const useMessages = ({
+  memoryManager,
+  currentSessionId,
+  createNewSession,
+  activePersona
+}: UseMessagesProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [pendingMessage, setPendingMessage] = useState<string>('');
+  const [streamingResponse, setStreamingResponse] = useState<boolean>(false);
+  
+  const { user } = useAuthContext();
+  const { autoSaveMessages } = useSettingsStore();
+
+  // Initialize with welcome message if empty
+  const initializeMessages = useCallback(() => {
+    if (messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: generateId(),
+        role: 'system',
+        content: 'Welcome to W3J Assistant! How can I help you today?',
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+      
+      if (memoryManager) {
+        memoryManager.saveMessage(welcomeMessage);
+      }
+    }
+  }, [messages.length, memoryManager]);
+
+  // Delete a message
+  const deleteMessage = useCallback(async (id: string) => {
+    try {
+      setMessages((prev) => prev.filter(msg => msg.id !== id));
+      
+      if (user && currentSessionId && autoSaveMessages) {
+        // Delete from database if logged in
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('id', id);
+      }
+      
+      // Remove from memory manager
+      if (memoryManager) {
+        memoryManager.activeMessages = memoryManager.activeMessages.filter(msg => msg.id !== id);
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Failed to delete message');
+    }
+  }, [user, currentSessionId, autoSaveMessages, memoryManager]);
+
+  // Send a message
+  const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'llama-3.3-70b-versatile') => {
+    if (!content.trim() && !imageUrl) return;
+    
+    try {
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        sessionId = await createNewSession();
+        if (!sessionId) {
+          throw new Error("Failed to create session");
+        }
+      }
+      
+      // Create user message
+      const userMessageId = generateId();
+      const userMessage: Message = {
+        id: userMessageId,
+        role: 'user',
+        content,
+        timestamp: new Date(),
+        imageUrl,
+      };
+      
+      // Add to UI
+      setMessages((prev) => [...prev, userMessage]);
+      
+      // Save to memory
+      if (memoryManager) {
+        await memoryManager.saveMessage(userMessage);
+      }
+      
+      setIsTyping(true);
+      
+      try {
+        // Save to Supabase if logged in
+        if (user && autoSaveMessages) {
+          await supabase.from('messages').insert({
+            id: userMessageId,
+            session_id: sessionId,
+            role: 'user',
+            content: content
+          });
+        }
+        
+        // Get system prompt based on model and persona
+        const systemPrompt = ModelManager.getSystemPrompt(model, activePersona);
+        
+        // Add system prompt to the context if it's not already there
+        let contextMessages = [];
+        if (memoryManager) {
+          // Get current context window
+          contextMessages = memoryManager.getContextWindow();
+          
+          // Check if we need to add a system prompt
+          const hasSystemPrompt = contextMessages.some(m => m.role === 'system' && m !== messages[0]);
+          
+          if (!hasSystemPrompt) {
+            const systemMessage: Message = {
+              id: generateId(),
+              role: 'system',
+              content: systemPrompt,
+              timestamp: new Date(),
+            };
+            
+            // Add to memory but not to UI
+            await memoryManager.saveMessage(systemMessage);
+            
+            // Get updated context with system message
+            contextMessages = memoryManager.getContextWindow();
+          }
+        } else {
+          // Fallback if memory manager isn't available
+          contextMessages = [
+            {
+              id: generateId(),
+              role: 'system',
+              content: systemPrompt,
+              timestamp: new Date(),
+            },
+            ...messages,
+            userMessage
+          ];
+        }
+        
+        // Format messages for the API
+        const apiMessages = contextMessages.map(m => ({ 
+          role: m.role, 
+          content: m.content 
+        }));
+        
+        // Create pending AI message for streaming
+        const assistantMessageId = generateId();
+        const pendingAssistantMessage: Message = {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          model: model,
+          pending: true
+        };
+        
+        // Add to UI to show typing indicator
+        setMessages(prev => [...prev, pendingAssistantMessage]);
+        setStreamingResponse(true);
+        
+        // Call Groq API
+        const response = await createGroqChatCompletion({
+          messages: apiMessages,
+          model: model,
+        });
+        
+        // Update assistant message with response
+        const assistantMessage: Message = {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date(),
+          model: model,
+        };
+        
+        // Update UI
+        setMessages(prev => 
+          prev.map(m => m.id === assistantMessageId ? assistantMessage : m)
+        );
+        
+        // Save to memory
+        if (memoryManager) {
+          await memoryManager.saveMessage(assistantMessage);
+        }
+        
+        // Save to Supabase if logged in
+        if (user && autoSaveMessages) {
+          await supabase.from('messages').insert({
+            id: assistantMessage.id,
+            session_id: sessionId,
+            role: 'assistant',
+            content: response.content
+          });
+        }
+      } catch (error) {
+        console.error('Error in chat processing:', error);
+        
+        // Remove pending message if there was an error
+        setMessages(prev => prev.filter(m => !m.pending));
+        
+        // Add error message
+        setMessages(prev => [
+          ...prev,
+          {
+            id: generateId(),
+            role: 'system',
+            content: 'Sorry, there was an error processing your request. Please check your connection and try again.',
+            timestamp: new Date(),
+          }
+        ]);
+        
+        throw error;
+      } finally {
+        setStreamingResponse(false);
+      }
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: 'system',
+          content: 'Sorry, there was an error processing your request. Please check your API key and try again.',
+          timestamp: new Date(),
+        },
+      ]);
+      
+      toast.error(error instanceof Error ? error.message : "Failed to process your message");
+    } finally {
+      setIsTyping(false);
+      setPendingMessage('');
+    }
+  }, [currentSessionId, messages, user, createNewSession, autoSaveMessages, activePersona, memoryManager]);
+
+  // Update pending message
+  const updatePendingMessage = useCallback((content: string) => {
+    setPendingMessage(content);
+  }, []);
+
+  // Load messages for a session
+  const loadSessionMessages = useCallback(async (sessionId: string) => {
+    if (!memoryManager) return;
+    
+    try {
+      const sessionMessages = await memoryManager.loadSessionMessages(sessionId);
+      if (sessionMessages.length > 0) {
+        setMessages(sessionMessages);
+      } else {
+        initializeMessages();
+      }
+    } catch (error) {
+      console.error('Error loading session messages:', error);
+      toast.error('Failed to load messages');
+      initializeMessages();
+    }
+  }, [memoryManager, initializeMessages]);
+
+  return {
+    messages,
+    isTyping,
+    pendingMessage,
+    streamingResponse,
+    sendMessage,
+    deleteMessage,
+    updatePendingMessage,
+    loadSessionMessages,
+    setMessages,
+  };
+};
+
+export default useMessages;
