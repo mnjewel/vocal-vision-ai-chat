@@ -175,7 +175,21 @@ const ChatInterface: React.FC = () => {
 
   // Get current persona
   const getCurrentPersona = () => {
-    return getAvailablePersonas().find(p => p.id === activePersona) || getAvailablePersonas()[0];
+    const availablePersonas = getAvailablePersonas();
+
+    // Safety check to ensure we have personas
+    if (!availablePersonas || availablePersonas.length === 0) {
+      // Return a default persona object if no personas are available
+      return {
+        id: 'default',
+        name: 'Default Assistant',
+        description: 'General-purpose AI assistant',
+        systemPrompt: 'You are a helpful, friendly AI assistant.',
+        suitableModels: []
+      };
+    }
+
+    return availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
   };
 
   return (

@@ -132,12 +132,14 @@
 
   .neural-glass {
     background-color: var(--neural-glass);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     box-shadow: var(--shadow-neural);
   }
 
   .neural-glass-strong {
     background-color: var(--neural-glass-strong);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     box-shadow: var(--shadow-neural);
   }
@@ -339,8 +341,8 @@
 /* Message container customization */
 .neural-messages-container {
   scroll-behavior: smooth;
-  mask-image: linear-gradient(to bottom, transparent, black 10px, black 90%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 10px, black 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent, black 10px, black 90%, transparent 100%);
 }
 
 /* Mobile optimizations */

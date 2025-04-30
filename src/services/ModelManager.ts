@@ -41,15 +41,15 @@ export const MODEL_CAPABILITIES: ModelCapability[] = [
     description: 'Handles extended context windows',
     icon: 'file-text',
     requiresModel: [
-      'llama-3.3-70b-versatile', 
-      'llama-3.1-8b-instant', 
-      'gemma2-9b-it', 
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'gemma2-9b-it',
       'deepseek-r1-distill-llama-70b'
     ],
     isAvailable: (model: string) => [
-      'llama-3.3-70b-versatile', 
-      'llama-3.1-8b-instant', 
-      'gemma2-9b-it', 
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'gemma2-9b-it',
       'deepseek-r1-distill-llama-70b'
     ].includes(model)
   }
@@ -90,20 +90,20 @@ class ModelManagerService {
   getSystemPrompt(modelId: string, personaId: string = 'default'): string {
     // Find the requested persona or fall back to default
     const persona = MODEL_PERSONAS.find(p => p.id === personaId) || MODEL_PERSONAS.find(p => p.id === 'default')!;
-    
+
     // Add model-specific capabilities to the system prompt
     let systemPrompt = persona.systemPrompt;
-    
+
     // For agentic models, add specific instructions
     if (['compound-beta', 'compound-beta-mini'].includes(modelId)) {
       systemPrompt += '\n\nYou have access to the web search and code execution tools. Use them when necessary to provide the most accurate and up-to-date information.';
     }
-    
+
     // For specialized models, highlight their strengths
     if (modelId === 'llama-3.3-70b-versatile') {
       systemPrompt += '\n\nYou have access to an expanded context window. Use this capability to provide comprehensive answers.';
     }
-    
+
     return systemPrompt;
   }
 
@@ -118,7 +118,17 @@ class ModelManagerService {
   }
 
   getAvailablePersonasForModel(modelId: string): ModelPersona[] {
-    return MODEL_PERSONAS.filter(persona => persona.suitableModels.includes(modelId));
+    const suitablePersonas = MODEL_PERSONAS.filter(persona => persona.suitableModels.includes(modelId));
+
+    // Always include the default persona if no suitable personas are found
+    if (suitablePersonas.length === 0) {
+      const defaultPersona = MODEL_PERSONAS.find(p => p.id === 'default');
+      if (defaultPersona) {
+        return [defaultPersona];
+      }
+    }
+
+    return suitablePersonas;
   }
 
   getModelById(modelId: string) {
