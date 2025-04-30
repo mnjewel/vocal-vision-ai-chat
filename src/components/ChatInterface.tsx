@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Send, Search, Code, Settings, Plus, Mic, Image, 
+import {
+  Send, Search, Code, Settings, Plus, Mic, Image,
   Split, Download, Hash, Brain, FileText, X
 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
@@ -13,10 +13,10 @@ import ModelSelector from './ModelSelector';
 import useChat from '@/hooks/useChat';
 import { hasGroqKey, removeGroqKey } from '@/integrations/groq/client';
 import { useAuthContext } from './AuthProvider';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ const ChatInterface: React.FC = () => {
     exportConversation,
     streamingResponse,
   } = useChat();
-  
+
   const [inputMessage, setInputMessage] = useState('');
   const { showAgentTools, defaultModel } = useSettingsStore();
   const [selectedModel, setSelectedModel] = useState(defaultModel);
@@ -51,7 +51,7 @@ const ChatInterface: React.FC = () => {
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPersonaSelector, setShowPersonaSelector] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuthContext();
@@ -73,7 +73,7 @@ const ChatInterface: React.FC = () => {
   // Check selected model type
   useEffect(() => {
     const groqModels = [
-      'llama3-8b-8192', 
+      'llama3-8b-8192',
       'llama3-70b-8192',
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
@@ -111,9 +111,9 @@ const ChatInterface: React.FC = () => {
   // Handle message submission
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    
+
     const groqModels = [
-      'llama3-8b-8192', 
+      'llama3-8b-8192',
       'llama3-70b-8192',
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
@@ -122,28 +122,28 @@ const ChatInterface: React.FC = () => {
       'compound-beta',
       'compound-beta-mini'
     ];
-    
+
     const isGroqModel = groqModels.includes(selectedModel);
-    
+
     if ((isGroqModel && !hasGroqKey())) {
       setShowAPIKeyInput(true);
       return;
     }
-    
+
     if (inputMessage.trim() || uploadedImage) {
       try {
         setIsSubmitting(true);
         await sendMessage(inputMessage, uploadedImage?.url, selectedModel);
         setInputMessage('');
         setUploadedImage(null);
-        
+
         // Reset textarea height
         if (textareaRef.current) {
           textareaRef.current.style.height = 'auto';
         }
       } catch (error) {
         console.error('Failed to send message:', error);
-        toast({ 
+        toast({
           variant: "destructive",
           title: "Error",
           description: "Failed to send message. Please try again."
@@ -172,11 +172,11 @@ const ChatInterface: React.FC = () => {
     setInputMessage(transcript);
     setTimeout(() => handleSubmit(), 500);
   };
-  
+
   // Handle model change
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
-    
+
     // Check if current persona is suitable for new model
     if (!ModelManager.isPersonaSuitableForModel(activePersona, model)) {
       // Switch to default persona if not suitable
@@ -189,51 +189,51 @@ const ChatInterface: React.FC = () => {
       }
     }
   };
-  
+
   // Handle persona change
   const handlePersonaChange = (personaId: string) => {
     setActivePersona(personaId);
     setShowPersonaSelector(false);
-    
-    const persona = ModelManager.MODEL_PERSONAS.find(p => p.id === personaId);
+
+    const persona = getAvailablePersonas().find(p => p.id === personaId);
     if (persona) {
       toast({
         description: `Switched to ${persona.name} persona`,
       });
     }
   };
-  
+
   // Handle API key saved
   const handleKeySaved = () => {
     setShowAPIKeyInput(false);
   };
-  
+
   // Handle API key reset
   const handleResetGroqKey = () => {
     removeGroqKey();
     setActiveAPITab('groq');
     setShowAPIKeyInput(true);
   };
-  
+
   // Handle fork conversation
   const handleForkConversation = async () => {
     await forkConversation();
   };
-  
+
   // Handle export conversation
   const handleExportConversation = () => {
     exportConversation();
   };
-  
+
   // Get current persona
   const getCurrentPersona = () => {
-    return ModelManager.MODEL_PERSONAS.find(p => p.id === activePersona) || ModelManager.MODEL_PERSONAS[0];
+    return getAvailablePersonas().find(p => p.id === activePersona) || getAvailablePersonas()[0];
   };
 
   return (
     <div className="flex flex-col h-full">
       {(!user || showAPIKeyInput) && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mx-4 mt-4 p-4 neural-glass rounded-lg shadow-neural"
@@ -246,11 +246,11 @@ const ChatInterface: React.FC = () => {
           </div>
         </motion.div>
       )}
-      
+
       {/* Model Capabilities Banner */}
       <AnimatePresence>
         {isAgentic(selectedModel) && hasGroqKey() && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5, height: 0 }}
@@ -273,11 +273,11 @@ const ChatInterface: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Active Persona Indicator */}
       <AnimatePresence>
         {getCurrentPersona().id !== 'default' && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5, height: 0 }}
@@ -293,9 +293,9 @@ const ChatInterface: React.FC = () => {
                   {getCurrentPersona().name} Active
                 </span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActivePersona('default')}
                 className="h-6 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100/50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/30"
               >
@@ -305,25 +305,25 @@ const ChatInterface: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <div className="flex-grow overflow-y-auto p-4 space-y-4 neural-messages-container">
         {messages.map((message) => (
-          <ChatMessage 
-            key={message.id} 
-            message={message} 
+          <ChatMessage
+            key={message.id}
+            message={message}
             onDelete={message.role !== 'system' ? handleDeleteMessage : undefined}
           />
         ))}
-        
+
         {isTyping && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 mb-2 rounded-xl rounded-bl-sm message-assistant animate-pulse-gentle shadow-neural"
           >
             <div className="flex">
               <div className="mr-3 flex-shrink-0">
-                <Avatar 
+                <Avatar
                   className="bg-neural-gradient-purple ring-2 ring-purple-200 dark:ring-purple-900"
                 >
                   <AvatarFallback className="bg-transparent text-sm font-medium">AI</AvatarFallback>
@@ -343,13 +343,13 @@ const ChatInterface: React.FC = () => {
             </div>
           </motion.div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
-      
+
       <AnimatePresence>
         {uploadedImage && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -360,9 +360,9 @@ const ChatInterface: React.FC = () => {
                 <Image className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">Image attached</span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setUploadedImage(null)}
                 className="h-6 w-6 p-0 hover:bg-gray-200/50 dark:hover:bg-gray-800/50 rounded-full"
               >
@@ -371,16 +371,16 @@ const ChatInterface: React.FC = () => {
               </Button>
             </div>
             <div className="rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/30">
-              <img 
-                src={uploadedImage.url} 
-                alt="Upload preview" 
+              <img
+                src={uploadedImage.url}
+                alt="Upload preview"
                 className="h-24 object-contain w-full"
               />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Persona Selector Popover */}
       <Popover open={showPersonaSelector} onOpenChange={setShowPersonaSelector}>
         <PopoverContent className="w-72 p-0" side="top">
@@ -419,7 +419,7 @@ const ChatInterface: React.FC = () => {
           </div>
         </PopoverContent>
       </Popover>
-      
+
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/30">
         {/* Conversation Action Buttons */}
         <div className="flex gap-2 mb-3 justify-between">
@@ -442,7 +442,7 @@ const ChatInterface: React.FC = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -463,7 +463,7 @@ const ChatInterface: React.FC = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -483,28 +483,28 @@ const ChatInterface: React.FC = () => {
               </Tooltip>
             </TooltipProvider>
           </div>
-          
+
           <SettingsDialog />
         </div>
-        
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex gap-2 items-center">
             <div className="flex-1">
-              <ModelSelector 
+              <ModelSelector
                 selectedModel={selectedModel}
                 onSelectModel={handleModelChange}
               />
             </div>
-            
+
             <div className="flex items-center gap-2">
               {getActiveCapabilities().map(capability => (
                 <TooltipProvider key={capability.id}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`
-                          ${capability.id === 'web_search' ? 'bg-blue-50/80 dark:bg-blue-900/30 text-xs border-blue-200/50 dark:border-blue-700/30' : 
+                          ${capability.id === 'web_search' ? 'bg-blue-50/80 dark:bg-blue-900/30 text-xs border-blue-200/50 dark:border-blue-700/30' :
                            capability.id === 'code_execution' ? 'bg-green-50/80 dark:bg-green-900/30 text-xs border-green-200/50 dark:border-green-700/30' :
                            'bg-purple-50/80 dark:bg-purple-900/30 text-xs border-purple-200/50 dark:border-purple-700/30'
                           }
@@ -524,7 +524,7 @@ const ChatInterface: React.FC = () => {
               ))}
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <div className="flex-grow neural-glass-strong rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
               <Textarea
@@ -536,32 +536,32 @@ const ChatInterface: React.FC = () => {
                 className="neural-input border-none min-h-[50px] max-h-[200px] resize-none px-4 py-3 focus:ring-0 focus-visible:ring-0 bg-transparent"
                 rows={1}
                 disabled={
-                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput) || 
-                  isSubmitting || 
+                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput) ||
+                  isSubmitting ||
                   streamingResponse
                 }
               />
             </div>
-            
+
             <div className="flex items-end gap-2">
               <div className="flex flex-row gap-1.5 h-[50px]">
                 <FileUpload onFileSelected={handleFileSelected}>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
-                    size="icon" 
+                    size="icon"
                     variant="ghost"
                     disabled={streamingResponse}
                   >
                     <Image className="h-5 w-5" />
                   </Button>
                 </FileUpload>
-                
+
                 <VoiceInput onTranscriptComplete={handleVoiceTranscript}>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
-                    size="icon" 
+                    size="icon"
                     variant="ghost"
                     disabled={streamingResponse}
                   >
@@ -569,14 +569,14 @@ const ChatInterface: React.FC = () => {
                   </Button>
                 </VoiceInput>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 size="icon"
                 className="neural-button h-[50px] w-[50px] rounded-xl"
                 disabled={
-                  (!inputMessage.trim() && !uploadedImage) || 
-                  isTyping || 
+                  (!inputMessage.trim() && !uploadedImage) ||
+                  isTyping ||
                   isSubmitting ||
                   streamingResponse ||
                   (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
