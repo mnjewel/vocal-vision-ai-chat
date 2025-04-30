@@ -1,5 +1,5 @@
 
-import { getGroqConfig, hasGroqKey } from '../groq/client';
+import { getGroqConfig, hasGroqKey } from './client';
 
 // Updated model list based on Groq's documentation
 export const getAvailableGroqModels = () => [

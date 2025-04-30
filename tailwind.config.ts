@@ -21,6 +21,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['SF Pro Display', 'Inter', 'sans-serif'],
+				mono: ['SF Mono', 'Menlo', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -89,6 +90,15 @@ export default {
 						light: '#2DD4BF',
 						DEFAULT: '#14B8A6',
 						dark: '#0D9488'
+					},
+					gray: {
+						light: '#F9FAFB',
+						DEFAULT: '#6B7280',
+						dark: '#1F2937'
+					},
+					glass: {
+						light: 'rgba(255, 255, 255, 0.7)',
+						dark: 'rgba(17, 24, 39, 0.7)',
 					}
 				},
 			},
@@ -143,7 +153,20 @@ export default {
 				'shimmer': {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
-				}
+				},
+				'neural-typing': {
+					'0%': { transform: 'translateX(-100%)' },
+					'50%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(100%)' }
+				},
+				'scale-in': {
+					'0%': { transform: 'scale(0.95)', opacity: '0' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'scale-out': {
+					'0%': { transform: 'scale(1)', opacity: '1' },
+					'100%': { transform: 'scale(0.95)', opacity: '0' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -154,7 +177,10 @@ export default {
 				'message-appear': 'message-appear 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
 				'float': 'float 3s ease-in-out infinite',
 				'neural-glow': 'neural-glow 2s ease-in-out infinite',
-				'shimmer': 'shimmer 2.5s infinite linear'
+				'shimmer': 'shimmer 2.5s infinite linear',
+				'neural-typing': 'neural-typing 2s infinite ease-in-out',
+				'scale-in': 'scale-in 0.2s ease-out',
+				'scale-out': 'scale-out 0.2s ease-out',
 			},
 			backgroundImage: {
 				'neural-gradient-blue': 'var(--neural-gradient-blue)',
@@ -164,7 +190,19 @@ export default {
 			},
 			backdropBlur: {
 				xs: '2px',
-			}
+			},
+			boxShadow: {
+				'neural': '0 8px 32px rgba(0, 0, 0, 0.08)',
+				'neural-strong': '0 8px 32px rgba(0, 0, 0, 0.12)',
+				'neural-inner': 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
+				'neural-button': '0 2px 8px rgba(59, 130, 246, 0.3)',
+			},
+			transitionProperty: {
+				'height': 'height',
+				'spacing': 'margin, padding',
+				'width': 'width',
+				'size': 'width, height',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

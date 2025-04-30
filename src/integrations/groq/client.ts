@@ -1,26 +1,31 @@
 
-// Groq API client configuration
+// Store key in localStorage
+const GROQ_API_KEY_STORAGE = 'groq_api_key';
 
 interface GroqConfig {
-  apiKey: string | null;
+  apiKey: string;
 }
 
-const LOCAL_STORAGE_KEY = 'groq-api-key';
-
 export const getGroqConfig = (): GroqConfig => {
+  const apiKey = localStorage.getItem(GROQ_API_KEY_STORAGE);
+  
+  if (!apiKey) {
+    throw new Error('Groq API key not configured');
+  }
+  
   return {
-    apiKey: localStorage.getItem(LOCAL_STORAGE_KEY),
+    apiKey,
   };
 };
 
 export const hasGroqKey = (): boolean => {
-  return localStorage.getItem(LOCAL_STORAGE_KEY) !== null;
+  return !!localStorage.getItem(GROQ_API_KEY_STORAGE);
 };
 
 export const saveGroqKey = (apiKey: string): void => {
-  localStorage.setItem(LOCAL_STORAGE_KEY, apiKey);
+  localStorage.setItem(GROQ_API_KEY_STORAGE, apiKey);
 };
 
 export const removeGroqKey = (): void => {
-  localStorage.removeItem(LOCAL_STORAGE_KEY);
+  localStorage.removeItem(GROQ_API_KEY_STORAGE);
 };

@@ -47,11 +47,16 @@
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 221.2 83.2% 53.3%;
     
-    /* Neural UI Gradients */
+    /* Neural UI Gradients - Light mode */
     --neural-gradient-blue: linear-gradient(135deg, rgba(56, 189, 248, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
     --neural-gradient-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
     --neural-gradient-teal: linear-gradient(135deg, rgba(20, 184, 166, 0.9) 0%, rgba(6, 182, 212, 0.9) 100%);
     --neural-gradient-neutral: linear-gradient(135deg, rgba(249, 250, 251, 0.9) 0%, rgba(243, 244, 246, 0.9) 100%);
+    
+    /* Neural Glass Effects */
+    --glass-light: rgba(255, 255, 255, 0.7);
+    --glass-light-stronger: rgba(255, 255, 255, 0.85);
+    --glass-border-light: rgba(255, 255, 255, 0.5);
   }
 
   .dark {
@@ -97,6 +102,11 @@
     --neural-gradient-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.7) 0%, rgba(168, 85, 247, 0.7) 100%);
     --neural-gradient-teal: linear-gradient(135deg, rgba(20, 184, 166, 0.7) 0%, rgba(6, 182, 212, 0.7) 100%);
     --neural-gradient-neutral: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%);
+    
+    /* Neural Glass Effects - Dark mode */
+    --glass-dark: rgba(17, 24, 39, 0.7);
+    --glass-dark-stronger: rgba(17, 24, 39, 0.85);
+    --glass-border-dark: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -108,11 +118,33 @@
   body {
     @apply bg-background text-foreground font-sans transition-colors duration-300;
   }
+  
+  /* Apple-inspired typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-medium tracking-tight;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
 }
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -124,17 +156,22 @@
   border-radius: 20px;
 }
 
-/* Message styling */
+/* Premium message styling */
 .message-user {
-  @apply relative border-none bg-gradient-to-br from-blue-50/80 to-blue-50/60 dark:from-blue-950/40 dark:to-blue-950/20;
+  @apply relative border-none bg-gradient-to-br from-blue-50/90 to-blue-50/70 dark:from-blue-950/50 dark:to-blue-950/30;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transform-origin: bottom right;
 }
 
 .message-assistant {
-  @apply relative border-none bg-gradient-to-br from-purple-50/80 to-purple-50/60 dark:from-purple-950/40 dark:to-purple-950/20;
+  @apply relative border-none bg-gradient-to-br from-purple-50/90 to-purple-50/70 dark:from-purple-950/50 dark:to-purple-950/30;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transform-origin: bottom left;
 }
 
 .message-system {
-  @apply relative border-none bg-gradient-to-br from-gray-50/80 to-gray-50/60 dark:from-gray-800/40 dark:to-gray-800/20;
+  @apply relative border-none bg-gradient-to-br from-gray-50/90 to-gray-50/70 dark:from-gray-800/50 dark:to-gray-800/30;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* Premium smooth animations */
@@ -160,6 +197,30 @@
 
 .premium-glass {
   @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/60 border border-white/20 dark:border-gray-700/20 shadow-lg;
+}
+
+.neural-glass {
+  backdrop-filter: blur(20px);
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.dark .neural-glass {
+  background: var(--glass-dark);
+  border: 1px solid var(--glass-border-dark);
+}
+
+.neural-glass-strong {
+  backdrop-filter: blur(24px);
+  background: var(--glass-light-stronger);
+  border: 1px solid var(--glass-border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .neural-glass-strong {
+  background: var(--glass-dark-stronger);
+  border: 1px solid var(--glass-border-dark);
 }
 
 .neural-glow {
@@ -212,6 +273,16 @@
   100% { width: 100%; }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Neural typing effect */
 .neural-typing {
   position: relative;
@@ -225,13 +296,107 @@
   left: 0;
   height: 100%;
   width: 100%;
-  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
   transform: translateX(-100%);
-  animation: neural-typing 1.5s infinite;
+  animation: neural-typing 2s infinite ease-in-out;
+}
+
+.dark .neural-typing::after {
+  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 @keyframes neural-typing {
   0% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }
   100% { transform: translateX(100%); }
+}
+
+/* Neural UI Components */
+.neural-input {
+  @apply backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/30 
+         focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.neural-button {
+  @apply backdrop-blur-md bg-gradient-to-br from-primary to-primary/90 text-white font-medium
+         hover:from-primary/90 hover:to-primary/80 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
+  box-shadow: 0 2px 8px rgba(var(--primary), 0.3);
+}
+
+.neural-button-secondary {
+  @apply backdrop-blur-md bg-gradient-to-br from-secondary to-secondary/90 text-white font-medium
+         hover:from-secondary/90 hover:to-secondary/80 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
+  box-shadow: 0 2px 8px rgba(var(--secondary), 0.3);
+}
+
+.neural-button-ghost {
+  @apply backdrop-blur-md bg-transparent border border-gray-300/50 dark:border-gray-600/30 font-medium
+         hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Neural code blocks */
+.neural-code {
+  @apply bg-gray-900/95 dark:bg-gray-950/95 text-gray-100 p-4 rounded-lg my-3 overflow-x-auto font-mono text-sm;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neural-quote {
+  @apply border-l-4 border-primary/50 pl-4 py-1 bg-primary/5 dark:bg-primary/10 rounded-r-md italic my-3;
+}
+
+/* Responsive utilities */
+@responsive {
+  .neural-container {
+    @apply px-4 sm:px-6 md:px-8 lg:px-12 max-w-7xl mx-auto;
+  }
+}
+
+/* Animation utilities */
+.animate-message-appear {
+  animation: message-appear 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 1.5s infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite linear;
+}
+
+/* Message status indicators */
+.message-seen::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+}
+
+.message-sending::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6B7280;
+  opacity: 0.5;
+  animation: pulse-gentle 1s infinite;
 }

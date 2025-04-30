@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Settings, Search, Code } from 'lucide-react';
+import { Send, Search, Code, Settings, Plus, Mic, Image } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import SettingsDialog from './SettingsDialog';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -138,7 +140,6 @@ const ChatInterface: React.FC = () => {
   };
   
   // Handle API key reset
-  
   const handleResetGroqKey = () => {
     removeGroqKey();
     setActiveAPITab('groq');
@@ -148,75 +149,116 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {(!user || showAPIKeyInput) && (
-        <div className="mx-4 mt-4">
-          API Key Required
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 p-4 neural-glass rounded-lg shadow-neural"
+        >
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+            </svg>
+            API Key Required
+          </div>
+        </motion.div>
       )}
       
       {isAgentic(selectedModel) && hasGroqKey() && (
-        <div className="mx-4 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+        <motion.div 
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mx-4 mt-2 p-4 neural-glass rounded-lg border border-amber-200/50 dark:border-amber-700/30 shadow-neural"
+        >
           <div className="flex items-center space-x-2 mb-2">
-            <Search className="h-4 w-4 text-amber-600" />
-            <Code className="h-4 w-4 text-amber-600" />
-            <span className="font-medium text-amber-800">Agentic Assistant Enabled</span>
+            <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
+              <Search className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
+              <Code className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <span className="font-medium text-amber-800 dark:text-amber-300">Agentic Assistant Enabled</span>
           </div>
-          <p className="text-sm text-amber-700">
+          <p className="text-sm text-amber-700 dark:text-amber-400">
             This model can search the web and execute code to answer your questions.
             Try asking about current events, weather, calculations, or code examples.
           </p>
-        </div>
+        </motion.div>
       )}
       
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      <div className="flex-grow overflow-y-auto p-4 space-y-4 neural-messages-container">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
         ))}
         
         {isTyping && (
-          <div className="p-4 mb-2 rounded-md message-assistant animate-pulse-gentle">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 mb-2 rounded-xl rounded-bl-sm message-assistant animate-pulse-gentle shadow-neural"
+          >
             <div className="flex">
               <div className="mr-3 flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-w3j-secondary flex items-center justify-center text-white">
-                  AI
-                </div>
+                <Avatar 
+                  className="bg-neural-gradient-purple ring-2 ring-purple-200 dark:ring-purple-900"
+                >
+                  <AvatarFallback className="bg-transparent text-sm font-medium">AI</AvatarFallback>
+                </Avatar>
               </div>
               <div>
                 <div className="flex items-center mb-1">
                   <span className="font-medium mr-2">W3J Assistant</span>
-                  <span className="text-xs text-gray-500">typing...</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">typing...</span>
                 </div>
-                <div className="h-4 w-24 bg-gradient-to-r from-w3j-secondary to-w3j-secondary/30 rounded animate-pulse"></div>
+                <div className="flex space-x-1">
+                  <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse-gentle"></div>
+                  <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse-gentle" style={{ animationDelay: "0.2s" }}></div>
+                  <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse-gentle" style={{ animationDelay: "0.4s" }}></div>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         
         <div ref={messagesEndRef} />
       </div>
       
-      {uploadedImage && (
-        <div className="m-4 p-2 border rounded-md bg-muted/20">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium">Image attached</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setUploadedImage(null)}
-              className="h-6 w-6 p-0"
-            >
-              &times;
-            </Button>
-          </div>
-          <img 
-            src={uploadedImage.url} 
-            alt="Upload preview" 
-            className="h-24 object-contain rounded-md"
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {uploadedImage && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="m-4 p-3 neural-glass rounded-lg shadow-neural"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium">Image attached</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setUploadedImage(null)}
+                className="h-6 w-6 p-0 hover:bg-gray-200/50 dark:hover:bg-gray-800/50 rounded-full"
+              >
+                <span className="sr-only">Remove</span>
+                &times;
+              </Button>
+            </div>
+            <div className="rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/30">
+              <img 
+                src={uploadedImage.url} 
+                alt="Upload preview" 
+                className="h-24 object-contain w-full"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/30">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex gap-2 items-center justify-between">
             <div className="flex items-center gap-2">
               <ModelSelector 
@@ -229,18 +271,18 @@ const ChatInterface: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex gap-1">
-                        <Badge variant="outline" className="bg-blue-50">
-                          <Search className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" className="bg-blue-50/80 dark:bg-blue-900/30 text-xs border-blue-200/50 dark:border-blue-700/30">
+                          <Search className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />
                           Web
                         </Badge>
-                        <Badge variant="outline" className="bg-green-50">
-                          <Code className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" className="bg-green-50/80 dark:bg-green-900/30 text-xs border-green-200/50 dark:border-green-700/30">
+                          <Code className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
                           Code
                         </Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>This model can search the web and run code</p>
+                      <p className="text-sm">This model can search the web and run code</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -251,32 +293,57 @@ const ChatInterface: React.FC = () => {
           </div>
           
           <div className="flex gap-2">
-            <Textarea
-              ref={textareaRef}
-              placeholder="Send a message..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="flex-grow resize-none min-h-[44px] max-h-[200px]"
-              rows={1}
-              disabled={
-                (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
-              }
-            />
+            <div className="flex-grow neural-glass-strong rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 transition-shadow">
+              <Textarea
+                ref={textareaRef}
+                placeholder="Send a message..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="neural-input border-none min-h-[50px] max-h-[200px] resize-none px-4 py-3 focus:ring-0 focus-visible:ring-0 bg-transparent"
+                rows={1}
+                disabled={
+                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
+                }
+              />
+            </div>
             
-            <div className="flex flex-col gap-2">
-              <FileUpload onFileSelected={handleFileSelected} />
-              <VoiceInput onTranscriptComplete={handleVoiceTranscript} />
+            <div className="flex items-end gap-2">
+              <div className="flex flex-row gap-1.5 h-[50px]">
+                <FileUpload onFileSelected={handleFileSelected}>
+                  <Button 
+                    type="button" 
+                    className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
+                    size="icon" 
+                    variant="ghost"
+                  >
+                    <Image className="h-5 w-5" />
+                  </Button>
+                </FileUpload>
+                
+                <VoiceInput onTranscriptComplete={handleVoiceTranscript}>
+                  <Button 
+                    type="button" 
+                    className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
+                    size="icon" 
+                    variant="ghost"
+                  >
+                    <Mic className="h-5 w-5" />
+                  </Button>
+                </VoiceInput>
+              </div>
+              
               <Button 
                 type="submit" 
-                size="icon" 
+                size="icon"
+                className="neural-button h-[50px] w-[50px] rounded-xl"
                 disabled={
                   (!inputMessage.trim() && !uploadedImage) || 
                   isTyping || 
                   (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
                 }
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               </Button>
             </div>
           </div>
