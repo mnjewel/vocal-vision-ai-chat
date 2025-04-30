@@ -20,7 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
+				sans: ['SF Pro Display', 'Inter', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -73,7 +73,24 @@ export default {
 					light: '#F9FAFB',
 					dark: '#111827',
 					gray: '#6B7280',
-				}
+				},
+				neural: {
+					blue: {
+						light: '#38BDF8',
+						DEFAULT: '#3B82F6',
+						dark: '#2563EB'
+					},
+					purple: {
+						light: '#A78BFA',
+						DEFAULT: '#8B5CF6',
+						dark: '#7C3AED'
+					},
+					teal: {
+						light: '#2DD4BF',
+						DEFAULT: '#14B8A6',
+						dark: '#0D9488'
+					}
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -112,8 +129,20 @@ export default {
 					'100%': { opacity: '1', transform: 'translateY(0)' }
 				},
 				'message-appear': {
-					'0%': { opacity: '0', transform: 'translateY(20px)' },
-					'100%': { opacity: '1', transform: 'translateY(0)' }
+					'0%': { opacity: '0', transform: 'translateY(20px) scale(0.98)' },
+					'100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'neural-glow': {
+					'0%, 100%': { opacity: '0.5' },
+					'50%': { opacity: '1' }
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-200% 0' },
+					'100%': { backgroundPosition: '200% 0' }
 				}
 			},
 			animation: {
@@ -122,7 +151,19 @@ export default {
 				'typing': 'typing 1.5s ease-out',
 				'pulse-gentle': 'pulse-gentle 1.5s infinite',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'message-appear': 'message-appear 0.3s ease-out',
+				'message-appear': 'message-appear 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+				'float': 'float 3s ease-in-out infinite',
+				'neural-glow': 'neural-glow 2s ease-in-out infinite',
+				'shimmer': 'shimmer 2.5s infinite linear'
+			},
+			backgroundImage: {
+				'neural-gradient-blue': 'var(--neural-gradient-blue)',
+				'neural-gradient-purple': 'var(--neural-gradient-purple)',
+				'neural-gradient-teal': 'var(--neural-gradient-teal)',
+				'neural-gradient-neutral': 'var(--neural-gradient-neutral)',
+			},
+			backdropBlur: {
+				xs: '2px',
 			}
 		}
 	},

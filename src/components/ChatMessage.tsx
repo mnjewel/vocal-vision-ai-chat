@@ -97,34 +97,45 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   return (
-    <div className={`p-4 mb-2 rounded-md animate-message-appear ${getMessageClass()}`}>
-      <div className="flex">
+    <div 
+      className={`p-4 mb-3 rounded-xl animate-message-appear shadow-sm ${getMessageClass()} premium-glass`}
+      style={{
+        maxWidth: '92%',
+        marginLeft: role === 'user' ? 'auto' : undefined,
+        marginRight: role === 'assistant' ? 'auto' : undefined
+      }}
+    >
+      <div className="flex items-start">
         <div className="mr-3 flex-shrink-0">
-          <Avatar className={role === 'assistant' ? 'bg-w3j-secondary' : role === 'user' ? 'bg-w3j-primary' : 'bg-gray-500'}>
-            <AvatarFallback>{getIconContent()}</AvatarFallback>
+          <Avatar 
+            className={`ring-2 ${role === 'assistant' ? 'bg-neural-gradient-purple ring-purple-200 dark:ring-purple-900' : 
+                              role === 'user' ? 'bg-neural-gradient-blue ring-blue-200 dark:ring-blue-900' : 
+                              'bg-neural-gradient-neutral ring-gray-200 dark:ring-gray-700'}`}
+          >
+            <AvatarFallback className="bg-transparent">{getIconContent()}</AvatarFallback>
           </Avatar>
         </div>
         <div className="flex-grow">
           <div className="flex items-center mb-1">
-            <span className="font-medium mr-2">
+            <span className="font-medium mr-2 text-sm">
               {role === 'user' ? 'You' : role === 'assistant' ? 'W3J Assistant' : 'System'}
             </span>
             <span className="text-xs text-gray-500">
               {formatTimestamp(timestamp)}
             </span>
             {model && (
-              <span className="text-xs bg-gray-100 text-gray-700 px-1 py-0.5 rounded ml-2">
+              <span className="text-xs backdrop-blur-sm bg-gray-100/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full ml-2">
                 {model}
               </span>
             )}
           </div>
-          <div className={pending ? 'opacity-70' : ''}>
+          <div className={pending ? 'opacity-70 neural-typing' : ''}>
             {imageUrl && (
               <div className="mb-2">
                 <img 
                   src={imageUrl} 
                   alt="Uploaded content" 
-                  className="max-h-64 rounded-md object-contain"
+                  className="max-h-64 rounded-md object-contain border border-gray-200 dark:border-gray-700"
                 />
               </div>
             )}
