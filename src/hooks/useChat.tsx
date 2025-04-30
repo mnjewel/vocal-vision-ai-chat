@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -166,6 +167,27 @@ export const useChat = () => {
     return sessions.find(s => s.id === currentSessionId) || null;
   }, [currentSessionId, sessions]);
 
+  const deleteMessage = useCallback(async (id: string) => {
+    try {
+      setMessages((prev) => prev.filter(msg => msg.id !== id));
+      
+      if (user && currentSessionId && autoSaveMessages) {
+        // Delete from database if logged in
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('id', id);
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete message",
+      });
+    }
+  }, [user, currentSessionId, autoSaveMessages]);
+
   const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'llama-3.3-70b-versatile') => {
     if (!content.trim() && !imageUrl) return;
     
@@ -299,6 +321,7 @@ export const useChat = () => {
     updatePendingMessage,
     createNewSession,
     getCurrentSession,
+    deleteMessage,
   };
 };
 

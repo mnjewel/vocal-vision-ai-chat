@@ -1,112 +1,108 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+:root {
+  --font-sans: 'SF Pro Display', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Base colors */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  
+  /* Neural UI Colors */
+  --neural-base-bg: 218 76% 90%;
+  --neural-dark-bg: 222 47% 11%;
+  --neural-gradient-blue: linear-gradient(135deg, hsl(213, 93%, 71%), hsl(239, 83%, 66%));
+  --neural-gradient-purple: linear-gradient(135deg, hsl(258, 100%, 68%), hsl(328, 92%, 64%));
+  --neural-gradient-neutral: linear-gradient(135deg, hsl(221, 16%, 68%), hsl(215, 19%, 53%));
+  --neural-glass: rgba(255, 255, 255, 0.65);
+  --neural-glass-strong: rgba(255, 255, 255, 0.85);
+  
+  /* Message colors */
+  --user-message-bg: hsl(213, 100%, 98%);
+  --user-message-border: hsl(214, 100%, 95%);
+  --assistant-message-bg: hsl(259, 100%, 99%);
+  --assistant-message-border: hsl(258, 100%, 97%);
+  --system-message-bg: hsl(220, 13%, 95%);
+  --system-message-border: hsl(220, 13%, 91%);
+  
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-neural: 0 2px 8px -2px rgba(22, 23, 24, 0.05), 0 5px 20px -2px rgba(22, 23, 24, 0.08);
+  --shadow-neural-depth: 0 2px 6px -1px rgba(0, 0, 0, 0.05), 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+  --shadow-neural-inner: inset 0 1px 1px rgba(255, 255, 255, 0.7);
+
+  /* Animation durations */
+  --animation-regular: 300ms;
+  --animation-slow: 500ms;
+  --animation-very-slow: 800ms;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 262.1 83.3% 57.8%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 189.7 94.5% 42.7%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
-    
-    /* Neural UI Gradients - Light mode */
-    --neural-gradient-blue: linear-gradient(135deg, rgba(56, 189, 248, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
-    --neural-gradient-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
-    --neural-gradient-teal: linear-gradient(135deg, rgba(20, 184, 166, 0.9) 0%, rgba(6, 182, 212, 0.9) 100%);
-    --neural-gradient-neutral: linear-gradient(135deg, rgba(249, 250, 251, 0.9) 0%, rgba(243, 244, 246, 0.9) 100%);
-    
-    /* Neural Glass Effects */
-    --glass-light: rgba(255, 255, 255, 0.7);
-    --glass-light-stronger: rgba(255, 255, 255, 0.85);
-    --glass-border-light: rgba(255, 255, 255, 0.5);
-  }
-
-  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 262.1 83.3% 57.8%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 189.7 94.5% 42.7%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
     
-    /* Neural UI Dark Gradients */
-    --neural-gradient-blue: linear-gradient(135deg, rgba(56, 189, 248, 0.7) 0%, rgba(59, 130, 246, 0.7) 100%);
-    --neural-gradient-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.7) 0%, rgba(168, 85, 247, 0.7) 100%);
-    --neural-gradient-teal: linear-gradient(135deg, rgba(20, 184, 166, 0.7) 0%, rgba(6, 182, 212, 0.7) 100%);
-    --neural-gradient-neutral: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%);
+    /* Neural UI Dark Colors */
+    --neural-base-bg: 222 47% 11%;
+    --neural-dark-bg: 218 76% 90%;
+    --neural-glass: rgba(23, 25, 35, 0.65);
+    --neural-glass-strong: rgba(23, 25, 35, 0.85);
     
-    /* Neural Glass Effects - Dark mode */
-    --glass-dark: rgba(17, 24, 39, 0.7);
-    --glass-dark-stronger: rgba(17, 24, 39, 0.85);
-    --glass-border-dark: rgba(255, 255, 255, 0.1);
+    /* Message colors in dark mode */
+    --user-message-bg: hsla(213, 40%, 15%, 0.7);
+    --user-message-border: hsla(214, 40%, 20%, 0.7);
+    --assistant-message-bg: hsla(259, 40%, 15%, 0.7);
+    --assistant-message-border: hsla(258, 40%, 20%, 0.7);
+    --system-message-bg: hsla(220, 13%, 18%, 0.7);
+    --system-message-border: hsla(220, 13%, 25%, 0.7);
+    
+    /* Shadow adjustments for dark mode */
+    --shadow-neural: 0 2px 8px -2px rgba(0, 0, 0, 0.2), 0 5px 20px -2px rgba(0, 0, 0, 0.25);
+    --shadow-neural-depth: 0 2px 6px -1px rgba(0, 0, 0, 0.2), 0 8px 24px -4px rgba(0, 0, 0, 0.25);
+    --shadow-neural-inner: inset 0 1px 1px rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -114,289 +110,265 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans transition-colors duration-300;
-  }
-  
-  /* Apple-inspired typography */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-medium tracking-tight;
-  }
-  
-  h1 {
-    @apply text-3xl md:text-4xl;
-  }
-  
-  h2 {
-    @apply text-2xl md:text-3xl;
-  }
-  
-  h3 {
-    @apply text-xl md:text-2xl;
-  }
-  
-  p {
-    @apply leading-relaxed;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-sans);
   }
 }
 
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@layer utilities {
+  .neural-gradient-blue {
+    background: var(--neural-gradient-blue);
+  }
+  
+  .neural-gradient-purple {
+    background: var(--neural-gradient-purple);
+  }
+  
+  .neural-gradient-neutral {
+    background: var(--neural-gradient-neutral);
+  }
+
+  .neural-glass {
+    background-color: var(--neural-glass);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-neural);
+  }
+
+  .neural-glass-strong {
+    background-color: var(--neural-glass-strong);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-neural);
+  }
+
+  .shadow-neural {
+    box-shadow: var(--shadow-neural);
+  }
+
+  .shadow-neural-depth {
+    box-shadow: var(--shadow-neural-depth);
+  }
+  
+  .animate-pulse-gentle {
+    animation: pulse-gentle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(155, 155, 155, 0.5);
-  border-radius: 20px;
-}
-
-/* Premium message styling */
+/* Message styling */
 .message-user {
-  @apply relative border-none bg-gradient-to-br from-blue-50/90 to-blue-50/70 dark:from-blue-950/50 dark:to-blue-950/30;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transform-origin: bottom right;
+  background-color: var(--user-message-bg);
+  border: 1px solid var(--user-message-border);
 }
 
 .message-assistant {
-  @apply relative border-none bg-gradient-to-br from-purple-50/90 to-purple-50/70 dark:from-purple-950/50 dark:to-purple-950/30;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transform-origin: bottom left;
+  background-color: var(--assistant-message-bg);
+  border: 1px solid var(--assistant-message-border);
 }
 
 .message-system {
-  @apply relative border-none bg-gradient-to-br from-gray-50/90 to-gray-50/70 dark:from-gray-800/50 dark:to-gray-800/30;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: var(--system-message-bg);
+  border: 1px solid var(--system-message-border);
 }
 
-/* Premium smooth animations */
-.message-appear {
-  animation: message-appear 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+/* Neural typing animation */
+.neural-typing {
+  position: relative;
 }
 
-.typing-indicator::after {
-  content: '...';
-  animation: ellipsis 1.5s infinite;
-}
-
-@keyframes ellipsis {
-  0% { content: '.'; }
-  33% { content: '..'; }
-  66% { content: '...'; }
-}
-
-/* Premium effects */
-.glass-effect {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md;
-}
-
-.premium-glass {
-  @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/60 border border-white/20 dark:border-gray-700/20 shadow-lg;
-}
-
-.neural-glass {
-  backdrop-filter: blur(20px);
-  background: var(--glass-light);
-  border: 1px solid var(--glass-border-light);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-}
-
-.dark .neural-glass {
-  background: var(--glass-dark);
-  border: 1px solid var(--glass-border-dark);
-}
-
-.neural-glass-strong {
-  backdrop-filter: blur(24px);
-  background: var(--glass-light-stronger);
-  border: 1px solid var(--glass-border-light);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.dark .neural-glass-strong {
-  background: var(--glass-dark-stronger);
-  border: 1px solid var(--glass-border-dark);
-}
-
-.neural-glow {
-  @apply relative;
-}
-
-.neural-glow::before {
+.neural-typing::after {
   content: '';
   position: absolute;
-  inset: -1px;
-  background: var(--neural-gradient-blue);
-  border-radius: inherit;
-  z-index: -1;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.05), 
+    transparent
+  );
+  animation: neural-typing-wave 2s infinite;
+}
+
+/* Code block styles */
+.neural-code {
+  position: relative;
+  background-color: rgba(30, 30, 30, 0.9);
+  color: #e6e6e6;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neural-code::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    transparent 10%, 
+    transparent 90%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* Blockquote styling */
+.neural-quote {
+  border-left: 3px solid rgba(99, 102, 241, 0.6);
+  padding: 0.5rem 0 0.5rem 1rem;
+  margin: 1rem 0;
+  color: rgba(107, 114, 128, 1);
+  font-style: italic;
+  background-color: rgba(99, 102, 241, 0.05);
+  border-radius: 0.25rem;
+}
+
+/* Neural button styles */
+.neural-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, hsl(213, 93%, 65%), hsl(239, 83%, 60%));
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.neural-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-.neural-glow:hover::before {
+.neural-button:hover::before {
+  animation: shimmer 1.5s infinite;
   opacity: 1;
 }
 
-/* New premium animations */
-@keyframes message-appear {
-  0% { 
-    opacity: 0; 
-    transform: translateY(10px) scale(0.98); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
-  }
+.neural-button-ghost {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
+.neural-button-ghost:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.neural-input {
+  transition: all 0.2s ease;
+}
+
+.neural-input:focus {
+  outline: none;
+}
+
+/* Background styling */
+.neural-app-bg {
+  background-image: radial-gradient(
+    circle at top right,
+    hsla(213, 100%, 96%, 0.8),
+    hsla(0, 0%, 100%, 0) 70%
+  );
+}
+
+.dark .neural-app-bg {
+  background-image: radial-gradient(
+    circle at top right,
+    hsla(213, 70%, 10%, 0.8),
+    hsla(0, 0%, 0%, 0) 70%
+  );
+}
+
+/* Animations */
 @keyframes pulse-gentle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes fade-in {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes typing-indicator {
-  0% { width: 0; }
-  20% { width: 20%; }
-  40% { width: 40%; }
-  60% { width: 60%; }
-  80% { width: 80%; }
-  100% { width: 100%; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* Neural typing effect */
-.neural-typing {
-  position: relative;
-  overflow: hidden;
-}
-
-.neural-typing::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  transform: translateX(-100%);
-  animation: neural-typing 2s infinite ease-in-out;
-}
-
-.dark .neural-typing::after {
-  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-}
-
-@keyframes neural-typing {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Neural UI Components */
-.neural-input {
-  @apply backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/30 
-         focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-}
-
-.neural-button {
-  @apply backdrop-blur-md bg-gradient-to-br from-primary to-primary/90 text-white font-medium
-         hover:from-primary/90 hover:to-primary/80 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
-  box-shadow: 0 2px 8px rgba(var(--primary), 0.3);
-}
-
-.neural-button-secondary {
-  @apply backdrop-blur-md bg-gradient-to-br from-secondary to-secondary/90 text-white font-medium
-         hover:from-secondary/90 hover:to-secondary/80 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
-  box-shadow: 0 2px 8px rgba(var(--secondary), 0.3);
-}
-
-.neural-button-ghost {
-  @apply backdrop-blur-md bg-transparent border border-gray-300/50 dark:border-gray-600/30 font-medium
-         hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98];
-}
-
-/* Neural code blocks */
-.neural-code {
-  @apply bg-gray-900/95 dark:bg-gray-950/95 text-gray-100 p-4 rounded-lg my-3 overflow-x-auto font-mono text-sm;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.neural-quote {
-  @apply border-l-4 border-primary/50 pl-4 py-1 bg-primary/5 dark:bg-primary/10 rounded-r-md italic my-3;
-}
-
-/* Responsive utilities */
-@responsive {
-  .neural-container {
-    @apply px-4 sm:px-6 md:px-8 lg:px-12 max-w-7xl mx-auto;
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 
-/* Animation utilities */
-.animate-message-appear {
-  animation: message-appear 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+@keyframes neural-typing-wave {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
 }
 
-.animate-pulse-gentle {
-  animation: pulse-gentle 1.5s infinite;
+/* Message container customization */
+.neural-messages-container {
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent, black 10px, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10px, black 90%, transparent 100%);
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .neural-messages-container {
+    padding: 0.75rem;
+  }
+  
+  .message-user, .message-assistant, .message-system {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Copy button animation */
+.copy-code {
+  transition: all 0.2s ease;
 }
 
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite linear;
+.copy-code:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Message status indicators */
-.message-seen::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10B981;
+/* Neural typing animation */
+.typing-indicator {
+  position: relative;
 }
 
-.message-sending::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #6B7280;
-  opacity: 0.5;
-  animation: pulse-gentle 1s infinite;
+.typing-indicator::after {
+  content: '...';
+  animation: typing-dots 1.5s infinite;
+  opacity: 0.7;
+}
+
+@keyframes typing-dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
 }

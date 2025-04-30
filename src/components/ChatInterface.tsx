@@ -21,6 +21,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import SettingsDialog from './SettingsDialog';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
+import { toast } from '@/components/ui/use-toast';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -29,6 +31,7 @@ const ChatInterface: React.FC = () => {
     pendingMessage,
     sendMessage,
     updatePendingMessage,
+    deleteMessage,
   } = useChat();
   
   const [inputMessage, setInputMessage] = useState('');
@@ -37,6 +40,7 @@ const ChatInterface: React.FC = () => {
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasGroqKey());
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -76,8 +80,16 @@ const ChatInterface: React.FC = () => {
     return ['compound-beta', 'compound-beta-mini'].includes(model);
   };
 
+  // Handle message deletion
+  const handleDeleteMessage = (id: string) => {
+    if (deleteMessage) {
+      deleteMessage(id);
+      toast({ description: "Message deleted" });
+    }
+  };
+
   // Handle message submission
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
     const groqModels = [
@@ -99,13 +111,25 @@ const ChatInterface: React.FC = () => {
     }
     
     if (inputMessage.trim() || uploadedImage) {
-      sendMessage(inputMessage, uploadedImage?.url, selectedModel);
-      setInputMessage('');
-      setUploadedImage(null);
-      
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+      try {
+        setIsSubmitting(true);
+        await sendMessage(inputMessage, uploadedImage?.url, selectedModel);
+        setInputMessage('');
+        setUploadedImage(null);
+        
+        // Reset textarea height
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast({ 
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send message. Please try again."
+        });
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -188,7 +212,11 @@ const ChatInterface: React.FC = () => {
       
       <div className="flex-grow overflow-y-auto p-4 space-y-4 neural-messages-container">
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+          <ChatMessage 
+            key={message.id} 
+            message={message} 
+            onDelete={message.role !== 'system' ? handleDeleteMessage : undefined}
+          />
         ))}
         
         {isTyping && (
@@ -303,7 +331,7 @@ const ChatInterface: React.FC = () => {
                 className="neural-input border-none min-h-[50px] max-h-[200px] resize-none px-4 py-3 focus:ring-0 focus-visible:ring-0 bg-transparent"
                 rows={1}
                 disabled={
-                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
+                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput) || isSubmitting
                 }
               />
             </div>
@@ -340,6 +368,7 @@ const ChatInterface: React.FC = () => {
                 disabled={
                   (!inputMessage.trim() && !uploadedImage) || 
                   isTyping || 
+                  isSubmitting ||
                   (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
                 }
               >

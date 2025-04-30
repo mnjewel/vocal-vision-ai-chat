@@ -1,15 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Message } from '@/hooks/useChat';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { motion } from 'framer-motion';
+import { Copy, Check, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 
 interface ChatMessageProps {
   message: Message;
+  onDelete?: (id: string) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { role, content, timestamp, imageUrl, pending, model } = message;
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete }) => {
+  const { id, role, content, timestamp, imageUrl, pending, model } = message;
+  const [copied, setCopied] = useState(false);
   
   const getMessageClass = () => {
     if (role === 'user') return 'message-user rounded-2xl rounded-br-sm';
@@ -55,6 +61,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }).format(date);
   };
   
+  const handleCopyContent = () => {
+    if (!content) return;
+    
+    navigator.clipboard.writeText(content)
+      .then(() => {
+        setCopied(true);
+        toast({ description: "Message copied to clipboard" });
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        toast({ 
+          variant: "destructive", 
+          description: "Failed to copy message" 
+        });
+      });
+  };
+  
+  const handleDeleteMessage = () => {
+    if (onDelete) {
+      onDelete(id);
+    }
+  };
+  
   // Format content with proper markdown and code blocks
   const formatContent = () => {
     if (!content) return '';
@@ -62,7 +92,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     // Replace code blocks with styled pre elements
     const withCodeBlocks = content.replace(
       /```(\w+)?([\s\S]*?)```/g, 
-      '<pre class="neural-code">$2</pre>'
+      '<pre class="neural-code relative group"><div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"><button class="copy-code p-1 rounded-md bg-gray-700/30 hover:bg-gray-700/50 text-gray-200" title="Copy code"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div><code>$2</code></pre>'
     );
     
     // Replace inline code
@@ -134,6 +164,40 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       .join('');
   };
 
+  // Add event listener for copy code buttons
+  React.useEffect(() => {
+    const copyButtons = document.querySelectorAll('.copy-code');
+    const handleClick = function(this: HTMLElement, e: Event) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const preElement = this.closest('pre');
+      if (preElement) {
+        const codeElement = preElement.querySelector('code');
+        if (codeElement) {
+          navigator.clipboard.writeText(codeElement.textContent || '')
+            .then(() => {
+              this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+              setTimeout(() => {
+                this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+              }, 2000);
+            })
+            .catch(console.error);
+        }
+      }
+    };
+    
+    copyButtons.forEach(button => {
+      button.addEventListener('click', handleClick);
+    });
+    
+    return () => {
+      copyButtons.forEach(button => {
+        button.removeEventListener('click', handleClick as EventListener);
+      });
+    };
+  }, [content]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
@@ -163,18 +227,60 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </Avatar>
         </div>
         <div className="flex-grow">
-          <div className="flex flex-wrap items-center mb-1.5 gap-1.5">
-            <span className="font-semibold text-sm">
-              {role === 'user' ? 'You' : role === 'assistant' ? 'W3J Assistant' : 'System'}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatTimestamp(timestamp)}
-            </span>
-            {model && (
-              <span className="text-xs neural-glass px-1.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300">
-                {model}
+          <div className="flex flex-wrap items-center justify-between mb-1.5 gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-sm">
+                {role === 'user' ? 'You' : role === 'assistant' ? 'W3J Assistant' : 'System'}
               </span>
-            )}
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatTimestamp(timestamp)}
+              </span>
+              {model && (
+                <span className="text-xs neural-glass px-1.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300">
+                  {model}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 p-0.5 opacity-60 hover:opacity-100"
+                      onClick={handleCopyContent}
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{copied ? "Copied!" : "Copy message"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {onDelete && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 p-0.5 opacity-60 hover:opacity-100 hover:text-red-500"
+                        onClick={handleDeleteMessage}
+                      >
+                        <Trash className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete message</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
           <div className={`${pending ? 'opacity-70 neural-typing' : ''}`}>
             {imageUrl && (

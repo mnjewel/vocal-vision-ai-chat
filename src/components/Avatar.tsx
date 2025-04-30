@@ -1,5 +1,5 @@
 
-import { Avatar as UIAvatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Avatar = UIAvatar;
-export { AvatarFallback };
+export { AvatarFallback, AvatarImage };

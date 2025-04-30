@@ -1,13 +1,14 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 
-interface FileUploadProps {
+export interface FileUploadProps {
   onFileSelected: (file: File, previewUrl: string) => void;
+  children?: ReactNode;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected, children }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,19 +68,31 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelected }) => {
         accept="image/*"
         style={{ display: 'none' }}
       />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={openFileDialog}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={isDragging ? 'ring-2 ring-primary' : ''}
-        title="Upload an image"
-      >
-        <Upload className="h-4 w-4" />
-      </Button>
+      {children ? (
+        <div 
+          onClick={openFileDialog}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={isDragging ? 'ring-2 ring-primary' : ''}
+        >
+          {children}
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={openFileDialog}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={isDragging ? 'ring-2 ring-primary' : ''}
+          title="Upload an image"
+        >
+          <Upload className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };
