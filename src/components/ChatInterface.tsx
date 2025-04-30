@@ -2,7 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Search, Code, Settings, Plus, Mic, Image } from 'lucide-react';
+import { 
+  Send, Search, Code, Settings, Plus, Mic, Image, 
+  Split, Download, Hash, Brain, FileText, X
+} from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
@@ -23,6 +26,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { toast } from '@/components/ui/use-toast';
+import { ModelManager } from '@/services/ModelManager';
 
 const ChatInterface: React.FC = () => {
   const {
@@ -32,6 +36,11 @@ const ChatInterface: React.FC = () => {
     sendMessage,
     updatePendingMessage,
     deleteMessage,
+    activePersona,
+    setActivePersona,
+    forkConversation,
+    exportConversation,
+    streamingResponse,
   } = useChat();
   
   const [inputMessage, setInputMessage] = useState('');
@@ -41,6 +50,7 @@ const ChatInterface: React.FC = () => {
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(!hasGroqKey());
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPersonaSelector, setShowPersonaSelector] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +88,16 @@ const ChatInterface: React.FC = () => {
   // Check if selected model is agentic
   const isAgentic = (model: string): boolean => {
     return ['compound-beta', 'compound-beta-mini'].includes(model);
+  };
+
+  // Get available capabilities for selected model
+  const getActiveCapabilities = () => {
+    return ModelManager.getCapabilitiesForModel(selectedModel);
+  };
+
+  // Get available personas for selected model
+  const getAvailablePersonas = () => {
+    return ModelManager.getAvailablePersonasForModel(selectedModel);
   };
 
   // Handle message deletion
@@ -156,6 +176,31 @@ const ChatInterface: React.FC = () => {
   // Handle model change
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
+    
+    // Check if current persona is suitable for new model
+    if (!ModelManager.isPersonaSuitableForModel(activePersona, model)) {
+      // Switch to default persona if not suitable
+      const availablePersonas = ModelManager.getAvailablePersonasForModel(model);
+      if (availablePersonas.length > 0) {
+        setActivePersona(availablePersonas[0].id);
+        toast({
+          description: `Switched to ${availablePersonas[0].name} persona to match selected model capabilities`,
+        });
+      }
+    }
+  };
+  
+  // Handle persona change
+  const handlePersonaChange = (personaId: string) => {
+    setActivePersona(personaId);
+    setShowPersonaSelector(false);
+    
+    const persona = ModelManager.MODEL_PERSONAS.find(p => p.id === personaId);
+    if (persona) {
+      toast({
+        description: `Switched to ${persona.name} persona`,
+      });
+    }
   };
   
   // Handle API key saved
@@ -168,6 +213,21 @@ const ChatInterface: React.FC = () => {
     removeGroqKey();
     setActiveAPITab('groq');
     setShowAPIKeyInput(true);
+  };
+  
+  // Handle fork conversation
+  const handleForkConversation = async () => {
+    await forkConversation();
+  };
+  
+  // Handle export conversation
+  const handleExportConversation = () => {
+    exportConversation();
+  };
+  
+  // Get current persona
+  const getCurrentPersona = () => {
+    return ModelManager.MODEL_PERSONAS.find(p => p.id === activePersona) || ModelManager.MODEL_PERSONAS[0];
   };
 
   return (
@@ -187,28 +247,64 @@ const ChatInterface: React.FC = () => {
         </motion.div>
       )}
       
-      {isAgentic(selectedModel) && hasGroqKey() && (
-        <motion.div 
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mx-4 mt-2 p-4 neural-glass rounded-lg border border-amber-200/50 dark:border-amber-700/30 shadow-neural"
-        >
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
-              <Search className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+      {/* Model Capabilities Banner */}
+      <AnimatePresence>
+        {isAgentic(selectedModel) && hasGroqKey() && (
+          <motion.div 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5, height: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mx-4 mt-2 p-4 neural-glass rounded-lg border border-amber-200/50 dark:border-amber-700/30 shadow-neural"
+          >
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
+                <Search className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
+                <Code className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span className="font-medium text-amber-800 dark:text-amber-300">Agentic Assistant Enabled</span>
             </div>
-            <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
-              <Code className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              This model can search the web and execute code to answer your questions.
+              Try asking about current events, weather, calculations, or code examples.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Active Persona Indicator */}
+      <AnimatePresence>
+        {getCurrentPersona().id !== 'default' && (
+          <motion.div 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5, height: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mx-4 mt-2 p-3 neural-glass rounded-lg border border-blue-200/50 dark:border-blue-700/30 shadow-neural"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="p-1.5 bg-blue-100/80 dark:bg-blue-900/30 rounded-full">
+                  <Brain className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="font-medium text-blue-800 dark:text-blue-300">
+                  {getCurrentPersona().name} Active
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setActivePersona('default')}
+                className="h-6 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100/50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/30"
+              >
+                <X className="h-3.5 w-3.5 mr-1" /> Clear
+              </Button>
             </div>
-            <span className="font-medium text-amber-800 dark:text-amber-300">Agentic Assistant Enabled</span>
-          </div>
-          <p className="text-sm text-amber-700 dark:text-amber-400">
-            This model can search the web and execute code to answer your questions.
-            Try asking about current events, weather, calculations, or code examples.
-          </p>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <div className="flex-grow overflow-y-auto p-4 space-y-4 neural-messages-container">
         {messages.map((message) => (
@@ -285,39 +381,148 @@ const ChatInterface: React.FC = () => {
         )}
       </AnimatePresence>
       
+      {/* Persona Selector Popover */}
+      <Popover open={showPersonaSelector} onOpenChange={setShowPersonaSelector}>
+        <PopoverContent className="w-72 p-0" side="top">
+          <div className="p-3 border-b">
+            <h3 className="text-sm font-medium">Select Persona</h3>
+            <p className="text-xs text-muted-foreground">Choose how the assistant behaves</p>
+          </div>
+          <div className="py-2 max-h-60 overflow-y-auto">
+            {getAvailablePersonas().map(persona => (
+              <button
+                key={persona.id}
+                className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                  activePersona === persona.id ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                }`}
+                onClick={() => handlePersonaChange(persona.id)}
+              >
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
+                    persona.id === 'researcher' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' :
+                    persona.id === 'coder' ? 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400' :
+                    persona.id === 'analyst' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400' :
+                    'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {persona.id === 'researcher' && <FileText className="w-4 h-4" />}
+                    {persona.id === 'coder' && <Code className="w-4 h-4" />}
+                    {persona.id === 'analyst' && <Hash className="w-4 h-4" />}
+                    {persona.id === 'default' && <Brain className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">{persona.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{persona.description}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/30">
+        {/* Conversation Action Buttons */}
+        <div className="flex gap-2 mb-3 justify-between">
+          <div className="flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={() => setShowPersonaSelector(true)}
+                  >
+                    <Brain className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{getCurrentPersona().id === 'default' ? 'Personas' : getCurrentPersona().name}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Select assistant persona</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      onClick={handleForkConversation}
+                    >
+                      <Split className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Fork</span>
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Create a branch of this conversation</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={handleExportConversation}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Export</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Export conversation as JSON</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <SettingsDialog />
+        </div>
+        
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex gap-2 items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
               <ModelSelector 
                 selectedModel={selectedModel}
                 onSelectModel={handleModelChange}
               />
-              
-              {isAgentic(selectedModel) && showAgentTools && (
-                <TooltipProvider>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {getActiveCapabilities().map(capability => (
+                <TooltipProvider key={capability.id}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex gap-1">
-                        <Badge variant="outline" className="bg-blue-50/80 dark:bg-blue-900/30 text-xs border-blue-200/50 dark:border-blue-700/30">
-                          <Search className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />
-                          Web
-                        </Badge>
-                        <Badge variant="outline" className="bg-green-50/80 dark:bg-green-900/30 text-xs border-green-200/50 dark:border-green-700/30">
-                          <Code className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
-                          Code
-                        </Badge>
-                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className={`
+                          ${capability.id === 'web_search' ? 'bg-blue-50/80 dark:bg-blue-900/30 text-xs border-blue-200/50 dark:border-blue-700/30' : 
+                           capability.id === 'code_execution' ? 'bg-green-50/80 dark:bg-green-900/30 text-xs border-green-200/50 dark:border-green-700/30' :
+                           'bg-purple-50/80 dark:bg-purple-900/30 text-xs border-purple-200/50 dark:border-purple-700/30'
+                          }
+                        `}
+                      >
+                        {capability.id === 'web_search' && <Search className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />}
+                        {capability.id === 'code_execution' && <Code className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />}
+                        {capability.id === 'long_context' && <FileText className="h-3 w-3 mr-1 text-purple-600 dark:text-purple-400" />}
+                        {capability.name}
+                      </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-sm">This model can search the web and run code</p>
+                      <p className="text-sm">{capability.description}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              )}
+              ))}
             </div>
-            
-            <SettingsDialog />
           </div>
           
           <div className="flex gap-2">
@@ -331,7 +536,9 @@ const ChatInterface: React.FC = () => {
                 className="neural-input border-none min-h-[50px] max-h-[200px] resize-none px-4 py-3 focus:ring-0 focus-visible:ring-0 bg-transparent"
                 rows={1}
                 disabled={
-                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput) || isSubmitting
+                  (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput) || 
+                  isSubmitting || 
+                  streamingResponse
                 }
               />
             </div>
@@ -344,6 +551,7 @@ const ChatInterface: React.FC = () => {
                     className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
                     size="icon" 
                     variant="ghost"
+                    disabled={streamingResponse}
                   >
                     <Image className="h-5 w-5" />
                   </Button>
@@ -355,6 +563,7 @@ const ChatInterface: React.FC = () => {
                     className="neural-button-ghost h-[50px] w-[50px] rounded-xl"
                     size="icon" 
                     variant="ghost"
+                    disabled={streamingResponse}
                   >
                     <Mic className="h-5 w-5" />
                   </Button>
@@ -369,6 +578,7 @@ const ChatInterface: React.FC = () => {
                   (!inputMessage.trim() && !uploadedImage) || 
                   isTyping || 
                   isSubmitting ||
+                  streamingResponse ||
                   (activeAPITab === 'groq' && !hasGroqKey() && !showAPIKeyInput)
                 }
               >

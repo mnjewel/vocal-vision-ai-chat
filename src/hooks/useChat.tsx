@@ -6,6 +6,8 @@ import { createGroqChatCompletion } from '@/integrations/groq/service';
 import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { MemoryManager } from '@/services/MemoryManager';
+import { ModelManager } from '@/services/ModelManager';
 
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -17,6 +19,11 @@ export interface Message {
   model?: string;
   pending?: boolean;
   imageUrl?: string;
+  metadata?: {
+    searchResults?: any[];
+    codeOutput?: string;
+    annotations?: string[];
+  };
 }
 
 export interface ChatSession {
@@ -35,9 +42,39 @@ export const useChat = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string>('');
+  const [activePersona, setActivePersona] = useState<string>('default');
+  const [streamingResponse, setStreamingResponse] = useState<boolean>(false);
   
   const { user } = useAuthContext();
   const { autoSaveMessages } = useSettingsStore();
+  
+  // Create a ref to store the MemoryManager instance
+  const memoryManagerRef = useRef<MemoryManager | null>(null);
+
+  useEffect(() => {
+    // Initialize or update the memory manager when session changes
+    if (currentSessionId) {
+      if (!memoryManagerRef.current || memoryManagerRef.current.sessionId !== currentSessionId) {
+        memoryManagerRef.current = new MemoryManager(currentSessionId);
+        
+        // Load messages for the current session
+        const loadSessionMessages = async () => {
+          if (memoryManagerRef.current) {
+            const sessionMessages = await memoryManagerRef.current.loadSessionMessages(currentSessionId);
+            if (sessionMessages.length > 0) {
+              setMessages(sessionMessages);
+            }
+          }
+        };
+        
+        loadSessionMessages();
+      }
+    } else {
+      // Create a new memory manager with a new session ID
+      const newSessionId = generateId();
+      memoryManagerRef.current = new MemoryManager(newSessionId);
+    }
+  }, [currentSessionId]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -96,14 +133,22 @@ export const useChat = () => {
       
       setSessions((prev) => [newSession, ...prev]);
       setCurrentSessionId(newSessionId);
-      setMessages([
-        {
-          id: generateId(),
-          role: 'system',
-          content: 'Welcome to W3J Assistant! How can I help you today?',
-          timestamp: new Date(),
-        },
-      ]);
+      
+      // Create a new memory manager
+      memoryManagerRef.current = new MemoryManager(newSessionId);
+      
+      // Set default welcome message
+      const welcomeMessage = {
+        id: generateId(),
+        role: 'system' as MessageRole,
+        content: 'Welcome to W3J Assistant! How can I help you today?',
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+      
+      // Save welcome message to memory
+      memoryManagerRef.current.saveMessage(welcomeMessage);
       
       return newSessionId;
     }
@@ -139,14 +184,22 @@ export const useChat = () => {
       
       setSessions((prev) => [newSession, ...prev]);
       setCurrentSessionId(newSession.id);
-      setMessages([
-        {
-          id: generateId(),
-          role: 'system',
-          content: 'Welcome to W3J Assistant! How can I help you today?',
-          timestamp: new Date(),
-        },
-      ]);
+      
+      // Create a new memory manager
+      memoryManagerRef.current = new MemoryManager(newSession.id);
+      
+      // Set default welcome message
+      const welcomeMessage = {
+        id: generateId(),
+        role: 'system' as MessageRole,
+        content: 'Welcome to W3J Assistant! How can I help you today?',
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+      
+      // Save welcome message to memory
+      memoryManagerRef.current.saveMessage(welcomeMessage);
       
       return newSession.id;
     } catch (error) {
@@ -178,6 +231,11 @@ export const useChat = () => {
           .delete()
           .eq('id', id);
       }
+      
+      // Remove from memory manager
+      if (memoryManagerRef.current) {
+        memoryManagerRef.current.activeMessages = memoryManagerRef.current.activeMessages.filter(msg => msg.id !== id);
+      }
     } catch (error) {
       console.error('Error deleting message:', error);
       toast({
@@ -187,6 +245,86 @@ export const useChat = () => {
       });
     }
   }, [user, currentSessionId, autoSaveMessages]);
+
+  const forkConversation = useCallback(async () => {
+    if (!memoryManagerRef.current) return null;
+    
+    try {
+      const newSessionId = await memoryManagerRef.current.createBranch();
+      
+      // Create a new session object
+      const newSession: ChatSession = {
+        id: newSessionId,
+        title: `Fork of ${getCurrentSession()?.title || 'conversation'}`,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      setSessions(prev => [newSession, ...prev]);
+      
+      toast({
+        title: "Conversation forked",
+        description: "A new branch has been created from this conversation",
+      });
+      
+      return newSessionId;
+    } catch (error) {
+      console.error('Error forking conversation:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fork conversation",
+      });
+      return null;
+    }
+  }, [getCurrentSession]);
+
+  const exportConversation = useCallback(() => {
+    try {
+      // Format messages for export
+      const exportData = {
+        title: getCurrentSession()?.title || 'Conversation Export',
+        timestamp: new Date().toISOString(),
+        messages: messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp.toISOString()
+        }))
+      };
+      
+      // Convert to JSON string
+      const jsonString = JSON.stringify(exportData, null, 2);
+      
+      // Create a blob and download link
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `conversation-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+      
+      toast({
+        title: "Conversation exported",
+        description: "Your conversation has been downloaded as a JSON file",
+      });
+    } catch (error) {
+      console.error('Error exporting conversation:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to export conversation",
+      });
+    }
+  }, [getCurrentSession, messages]);
 
   const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'llama-3.3-70b-versatile') => {
     if (!content.trim() && !imageUrl) return;
@@ -200,6 +338,7 @@ export const useChat = () => {
         }
       }
       
+      // Create user message
       const userMessageId = generateId();
       const userMessage: Message = {
         id: userMessageId,
@@ -209,11 +348,18 @@ export const useChat = () => {
         imageUrl,
       };
       
+      // Add to UI
       setMessages((prev) => [...prev, userMessage]);
+      
+      // Save to memory
+      if (memoryManagerRef.current) {
+        await memoryManagerRef.current.saveMessage(userMessage);
+      }
       
       setIsTyping(true);
       
       try {
+        // Save to Supabase if logged in
         if (user && autoSaveMessages) {
           await supabase.from('messages').insert({
             id: userMessageId,
@@ -223,6 +369,7 @@ export const useChat = () => {
           });
         }
         
+        // Update session title if new conversation
         const session = getCurrentSession();
         if (session?.title === 'New Conversation' && user && autoSaveMessages) {
           const truncatedTitle = content.substring(0, 30) + (content.length > 30 ? '...' : '');
@@ -242,25 +389,93 @@ export const useChat = () => {
           ));
         }
         
-        // Update this to use createGroqChatCompletion
+        // Get system prompt based on model and persona
+        const systemPrompt = ModelManager.getSystemPrompt(model, activePersona);
+        
+        // Add system prompt to the context if it's not already there
+        let contextMessages = [];
+        if (memoryManagerRef.current) {
+          // Get current context window
+          contextMessages = memoryManagerRef.current.getContextWindow();
+          
+          // Check if we need to add a system prompt
+          const hasSystemPrompt = contextMessages.some(m => m.role === 'system' && m !== messages[0]);
+          
+          if (!hasSystemPrompt) {
+            const systemMessage: Message = {
+              id: generateId(),
+              role: 'system',
+              content: systemPrompt,
+              timestamp: new Date(),
+            };
+            
+            // Add to memory but not to UI
+            await memoryManagerRef.current.saveMessage(systemMessage);
+            
+            // Get updated context with system message
+            contextMessages = memoryManagerRef.current.getContextWindow();
+          }
+        } else {
+          // Fallback if memory manager isn't available
+          contextMessages = [
+            {
+              id: generateId(),
+              role: 'system',
+              content: systemPrompt,
+              timestamp: new Date(),
+            },
+            ...messages,
+            userMessage
+          ];
+        }
+        
+        // Format messages for the API
+        const apiMessages = contextMessages.map(m => ({ 
+          role: m.role, 
+          content: m.content 
+        }));
+        
+        // Create pending AI message for streaming
+        const assistantMessageId = generateId();
+        const pendingAssistantMessage: Message = {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          model: model,
+          pending: true
+        };
+        
+        // Add to UI to show typing indicator
+        setMessages(prev => [...prev, pendingAssistantMessage]);
+        setStreamingResponse(true);
+        
+        // Call Groq API
         const response = await createGroqChatCompletion({
-          messages: messages
-            .filter(m => m.role !== 'system' || messages.indexOf(m) === 0)
-            .concat([userMessage])
-            .map(m => ({ role: m.role, content: m.content })),
+          messages: apiMessages,
           model: model,
         });
         
+        // Update assistant message with response
         const assistantMessage: Message = {
-          id: generateId(),
+          id: assistantMessageId,
           role: 'assistant',
           content: response.content,
           timestamp: new Date(),
           model: model,
         };
         
-        setMessages((prev) => [...prev, assistantMessage]);
+        // Update UI
+        setMessages(prev => 
+          prev.map(m => m.id === assistantMessageId ? assistantMessage : m)
+        );
         
+        // Save to memory
+        if (memoryManagerRef.current) {
+          await memoryManagerRef.current.saveMessage(assistantMessage);
+        }
+        
+        // Save to Supabase if logged in
         if (user && autoSaveMessages) {
           await supabase.from('messages').insert({
             id: assistantMessage.id,
@@ -271,6 +486,7 @@ export const useChat = () => {
           });
         }
         
+        // Update session timestamp
         if (sessionId && user && autoSaveMessages) {
           await supabase
             .from('chat_sessions')
@@ -279,7 +495,24 @@ export const useChat = () => {
         }
       } catch (error) {
         console.error('Error in chat processing:', error);
+        
+        // Remove pending message if there was an error
+        setMessages(prev => prev.filter(m => !m.pending));
+        
+        // Add error message
+        setMessages(prev => [
+          ...prev,
+          {
+            id: generateId(),
+            role: 'system',
+            content: 'Sorry, there was an error processing your request. Please check your connection and try again.',
+            timestamp: new Date(),
+          }
+        ]);
+        
         throw error;
+      } finally {
+        setStreamingResponse(false);
       }
       
     } catch (error) {
@@ -304,7 +537,7 @@ export const useChat = () => {
       setIsTyping(false);
       setPendingMessage('');
     }
-  }, [currentSessionId, messages, user, createNewSession, getCurrentSession, autoSaveMessages]);
+  }, [currentSessionId, messages, user, createNewSession, getCurrentSession, autoSaveMessages, activePersona]);
 
   const updatePendingMessage = useCallback((content: string) => {
     setPendingMessage(content);
@@ -316,12 +549,17 @@ export const useChat = () => {
     pendingMessage,
     sessions,
     currentSessionId,
+    activePersona,
+    streamingResponse,
     setCurrentSessionId,
     sendMessage,
     updatePendingMessage,
     createNewSession,
     getCurrentSession,
     deleteMessage,
+    setActivePersona,
+    forkConversation,
+    exportConversation,
   };
 };
 

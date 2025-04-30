@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Message } from '@/hooks/useChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { motion } from 'framer-motion';
-import { Copy, Check, Trash } from 'lucide-react';
+import { Copy, Check, Trash, Search, Code, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
@@ -14,7 +14,7 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete }) => {
-  const { id, role, content, timestamp, imageUrl, pending, model } = message;
+  const { id, role, content, timestamp, imageUrl, pending, model, metadata } = message;
   const [copied, setCopied] = useState(false);
   
   const getMessageClass = () => {
@@ -198,6 +198,53 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete }) => {
     };
   }, [content]);
 
+  // Render metadata (like search results) if available
+  const renderMetadata = () => {
+    if (!metadata) return null;
+    
+    return (
+      <div className="mt-3 space-y-2">
+        {metadata.searchResults && metadata.searchResults.length > 0 && (
+          <div className="neural-glass p-3 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2 text-blue-700 dark:text-blue-400 font-medium text-sm">
+              <Search className="h-3.5 w-3.5" />
+              <span>Web Search Results</span>
+            </div>
+            <div className="space-y-2">
+              {metadata.searchResults.map((result: any, index: number) => (
+                <div key={index} className="text-sm border-t border-blue-100 dark:border-blue-900/50 pt-2 first:border-0 first:pt-0">
+                  <div className="font-medium">{result.title}</div>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs">{result.snippet}</p>
+                  <a 
+                    href={result.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs mt-1"
+                  >
+                    {result.displayUrl || result.url}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {metadata.codeOutput && (
+          <div className="neural-glass p-3 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2 text-green-700 dark:text-green-400 font-medium text-sm">
+              <Code className="h-3.5 w-3.5" />
+              <span>Code Execution Result</span>
+            </div>
+            <pre className="text-sm p-2 bg-gray-100 dark:bg-gray-800/80 rounded overflow-x-auto">
+              {metadata.codeOutput}
+            </pre>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
@@ -298,6 +345,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete }) => {
               }`}
               dangerouslySetInnerHTML={{ __html: formatContent() }}
             />
+            
+            {renderMetadata()}
           </div>
         </div>
       </div>
