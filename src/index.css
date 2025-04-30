@@ -8,7 +8,7 @@
 
 :root {
   --font-sans: 'SF Pro Display', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  
+
   /* Base colors */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -29,7 +29,7 @@
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
-  
+
   /* Neural UI Colors */
   --neural-base-bg: 218 76% 90%;
   --neural-dark-bg: 222 47% 11%;
@@ -38,7 +38,7 @@
   --neural-gradient-neutral: linear-gradient(135deg, hsl(221, 16%, 68%), hsl(215, 19%, 53%));
   --neural-glass: rgba(255, 255, 255, 0.65);
   --neural-glass-strong: rgba(255, 255, 255, 0.85);
-  
+
   /* Message colors */
   --user-message-bg: hsl(213, 100%, 98%);
   --user-message-border: hsl(214, 100%, 95%);
@@ -46,7 +46,7 @@
   --assistant-message-border: hsl(258, 100%, 97%);
   --system-message-bg: hsl(220, 13%, 95%);
   --system-message-border: hsl(220, 13%, 91%);
-  
+
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -84,13 +84,13 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-    
+
     /* Neural UI Dark Colors */
     --neural-base-bg: 222 47% 11%;
     --neural-dark-bg: 218 76% 90%;
     --neural-glass: rgba(23, 25, 35, 0.65);
     --neural-glass-strong: rgba(23, 25, 35, 0.85);
-    
+
     /* Message colors in dark mode */
     --user-message-bg: hsla(213, 40%, 15%, 0.7);
     --user-message-border: hsla(214, 40%, 20%, 0.7);
@@ -98,7 +98,7 @@
     --assistant-message-border: hsla(258, 40%, 20%, 0.7);
     --system-message-bg: hsla(220, 13%, 18%, 0.7);
     --system-message-border: hsla(220, 13%, 25%, 0.7);
-    
+
     /* Shadow adjustments for dark mode */
     --shadow-neural: 0 2px 8px -2px rgba(0, 0, 0, 0.2), 0 5px 20px -2px rgba(0, 0, 0, 0.25);
     --shadow-neural-depth: 0 2px 6px -1px rgba(0, 0, 0, 0.2), 0 8px 24px -4px rgba(0, 0, 0, 0.25);
@@ -121,11 +121,11 @@
   .neural-gradient-blue {
     background: var(--neural-gradient-blue);
   }
-  
+
   .neural-gradient-purple {
     background: var(--neural-gradient-purple);
   }
-  
+
   .neural-gradient-neutral {
     background: var(--neural-gradient-neutral);
   }
@@ -149,7 +149,7 @@
   .shadow-neural-depth {
     box-shadow: var(--shadow-neural-depth);
   }
-  
+
   .animate-pulse-gentle {
     animation: pulse-gentle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -183,9 +183,9 @@
   height: 100%;
   top: 0;
   left: 0;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.05), 
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
     transparent
   );
   animation: neural-typing-wave 2s infinite;
@@ -213,10 +213,10 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    transparent 10%, 
-    transparent 90%, 
+  background: linear-gradient(to bottom,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 10%,
+    transparent 90%,
     rgba(255, 255, 255, 0.05) 100%
   );
   pointer-events: none;
@@ -309,6 +309,15 @@
   }
 }
 
+/* Typing animation dots */
+.typing-dot-1 {
+  animation-delay: 0.2s;
+}
+
+.typing-dot-2 {
+  animation-delay: 0.4s;
+}
+
 @keyframes shimmer {
   0% {
     left: -100%;
@@ -339,7 +348,7 @@
   .neural-messages-container {
     padding: 0.75rem;
   }
-  
+
   .message-user, .message-assistant, .message-system {
     max-width: 100% !important;
     margin-left: 0 !important;
