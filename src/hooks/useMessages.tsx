@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
 import { createGroqChatCompletion } from '@/integrations/groq/service';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ModelManager } from '@/services/ModelManager';
@@ -28,7 +28,7 @@ export const useMessages = ({
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [pendingMessage, setPendingMessage] = useState<string>('');
   const [streamingResponse, setStreamingResponse] = useState<boolean>(false);
-  
+
   const { user } = useAuthContext();
   const { autoSaveMessages } = useSettingsStore();
 
@@ -41,9 +41,9 @@ export const useMessages = ({
         content: 'Welcome to W3J Assistant! How can I help you today?',
         timestamp: new Date(),
       };
-      
+
       setMessages([welcomeMessage]);
-      
+
       if (memoryManager) {
         memoryManager.saveMessage(welcomeMessage);
       }
@@ -54,29 +54,29 @@ export const useMessages = ({
   const deleteMessage = useCallback(async (id: string) => {
     try {
       setMessages((prev) => prev.filter(msg => msg.id !== id));
-      
-      if (user && currentSessionId && autoSaveMessages) {
-        // Delete from database if logged in
-        await supabase
-          .from('messages')
-          .delete()
-          .eq('id', id);
-      }
-      
-      // Remove from memory manager
+
+      // Delete from memory manager (which handles Supabase deletion)
       if (memoryManager) {
-        memoryManager.activeMessages = memoryManager.activeMessages.filter(msg => msg.id !== id);
+        await memoryManager.deleteMessage(id);
       }
+
+      toast({
+        description: "Message deleted"
+      });
     } catch (error) {
       console.error('Error deleting message:', error);
-      toast.error('Failed to delete message');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete message"
+      });
     }
-  }, [user, currentSessionId, autoSaveMessages, memoryManager]);
+  }, [memoryManager]);
 
   // Send a message
   const sendMessage = useCallback(async (content: string, imageUrl?: string, model: string = 'llama-3.3-70b-versatile') => {
     if (!content.trim() && !imageUrl) return;
-    
+
     try {
       let sessionId = currentSessionId;
       if (!sessionId) {
@@ -85,7 +85,7 @@ export const useMessages = ({
           throw new Error("Failed to create session");
         }
       }
-      
+
       // Create user message
       const userMessageId = generateId();
       const userMessage: Message = {
@@ -95,17 +95,17 @@ export const useMessages = ({
         timestamp: new Date(),
         imageUrl,
       };
-      
+
       // Add to UI
       setMessages((prev) => [...prev, userMessage]);
-      
+
       // Save to memory
       if (memoryManager) {
         await memoryManager.saveMessage(userMessage);
       }
-      
+
       setIsTyping(true);
-      
+
       try {
         // Save to Supabase if logged in
         if (user && autoSaveMessages) {
@@ -116,19 +116,19 @@ export const useMessages = ({
             content: content
           });
         }
-        
+
         // Get system prompt based on model and persona
         const systemPrompt = ModelManager.getSystemPrompt(model, activePersona);
-        
+
         // Add system prompt to the context if it's not already there
         let contextMessages = [];
         if (memoryManager) {
           // Get current context window
           contextMessages = memoryManager.getContextWindow();
-          
+
           // Check if we need to add a system prompt
           const hasSystemPrompt = contextMessages.some(m => m.role === 'system' && m !== messages[0]);
-          
+
           if (!hasSystemPrompt) {
             const systemMessage: Message = {
               id: generateId(),
@@ -136,10 +136,10 @@ export const useMessages = ({
               content: systemPrompt,
               timestamp: new Date(),
             };
-            
+
             // Add to memory but not to UI
             await memoryManager.saveMessage(systemMessage);
-            
+
             // Get updated context with system message
             contextMessages = memoryManager.getContextWindow();
           }
@@ -156,13 +156,13 @@ export const useMessages = ({
             userMessage
           ];
         }
-        
+
         // Format messages for the API
-        const apiMessages = contextMessages.map(m => ({ 
-          role: m.role, 
-          content: m.content 
+        const apiMessages = contextMessages.map(m => ({
+          role: m.role,
+          content: m.content
         }));
-        
+
         // Create pending AI message for streaming
         const assistantMessageId = generateId();
         const pendingAssistantMessage: Message = {
@@ -173,17 +173,17 @@ export const useMessages = ({
           model: model,
           pending: true
         };
-        
+
         // Add to UI to show typing indicator
         setMessages(prev => [...prev, pendingAssistantMessage]);
         setStreamingResponse(true);
-        
+
         // Call Groq API
         const response = await createGroqChatCompletion({
           messages: apiMessages,
           model: model,
         });
-        
+
         // Update assistant message with response
         const assistantMessage: Message = {
           id: assistantMessageId,
@@ -192,17 +192,17 @@ export const useMessages = ({
           timestamp: new Date(),
           model: model,
         };
-        
+
         // Update UI
-        setMessages(prev => 
+        setMessages(prev =>
           prev.map(m => m.id === assistantMessageId ? assistantMessage : m)
         );
-        
+
         // Save to memory
         if (memoryManager) {
           await memoryManager.saveMessage(assistantMessage);
         }
-        
+
         // Save to Supabase if logged in
         if (user && autoSaveMessages) {
           await supabase.from('messages').insert({
@@ -214,10 +214,10 @@ export const useMessages = ({
         }
       } catch (error) {
         console.error('Error in chat processing:', error);
-        
+
         // Remove pending message if there was an error
         setMessages(prev => prev.filter(m => !m.pending));
-        
+
         // Add error message
         setMessages(prev => [
           ...prev,
@@ -228,15 +228,15 @@ export const useMessages = ({
             timestamp: new Date(),
           }
         ]);
-        
+
         throw error;
       } finally {
         setStreamingResponse(false);
       }
-      
+
     } catch (error) {
       console.error('Error sending message:', error);
-      
+
       setMessages((prev) => [
         ...prev,
         {
@@ -246,8 +246,12 @@ export const useMessages = ({
           timestamp: new Date(),
         },
       ]);
-      
-      toast.error(error instanceof Error ? error.message : "Failed to process your message");
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process your message"
+      });
     } finally {
       setIsTyping(false);
       setPendingMessage('');
@@ -262,7 +266,7 @@ export const useMessages = ({
   // Load messages for a session
   const loadSessionMessages = useCallback(async (sessionId: string) => {
     if (!memoryManager) return;
-    
+
     try {
       const sessionMessages = await memoryManager.loadSessionMessages(sessionId);
       if (sessionMessages.length > 0) {
@@ -272,7 +276,11 @@ export const useMessages = ({
       }
     } catch (error) {
       console.error('Error loading session messages:', error);
-      toast.error('Failed to load messages');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load conversation history"
+      });
       initializeMessages();
     }
   }, [memoryManager, initializeMessages]);

@@ -52,6 +52,30 @@ export const MODEL_CAPABILITIES: ModelCapability[] = [
       'gemma2-9b-it',
       'deepseek-r1-distill-llama-70b'
     ].includes(model)
+  },
+  {
+    id: 'vision',
+    name: 'Vision',
+    description: 'Can analyze and understand images',
+    icon: 'image',
+    requiresModel: ['llama-3.3-70b-versatile', 'compound-beta'],
+    isAvailable: (model: string) => ['llama-3.3-70b-versatile', 'compound-beta'].includes(model)
+  },
+  {
+    id: 'memory',
+    name: 'Enhanced Memory',
+    description: 'Maintains context across long conversations',
+    icon: 'brain',
+    requiresModel: ['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'],
+    isAvailable: (model: string) => ['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'].includes(model)
+  },
+  {
+    id: 'tools',
+    name: 'Tool Use',
+    description: 'Can use external tools to accomplish tasks',
+    icon: 'tool',
+    requiresModel: ['compound-beta', 'compound-beta-mini'],
+    isAvailable: (model: string) => ['compound-beta', 'compound-beta-mini'].includes(model)
   }
 ];
 
@@ -101,7 +125,17 @@ class ModelManagerService {
 
     // For specialized models, highlight their strengths
     if (modelId === 'llama-3.3-70b-versatile') {
-      systemPrompt += '\n\nYou have access to an expanded context window. Use this capability to provide comprehensive answers.';
+      systemPrompt += '\n\nYou have access to an expanded context window and vision capabilities. Use these capabilities to provide comprehensive answers.';
+    }
+
+    // For models with enhanced memory
+    if (['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'].includes(modelId)) {
+      systemPrompt += '\n\nYou have access to enhanced memory capabilities that allow you to maintain context across long conversations. Previous parts of this conversation may have been summarized to help you maintain context.';
+    }
+
+    // For models with vision capabilities
+    if (['llama-3.3-70b-versatile', 'compound-beta'].includes(modelId)) {
+      systemPrompt += '\n\nYou can analyze and understand images that the user shares with you. When an image is shared, describe what you see and respond appropriately.';
     }
 
     return systemPrompt;

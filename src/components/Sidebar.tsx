@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ChatSession } from '@/hooks/useChat';
-import { 
-  MessageSquare, 
-  User, 
-  Upload, 
-  Video, 
-  Settings, 
+import {
+  MessageSquare,
+  User,
+  Upload,
+  Video,
+  Settings,
   Search,
   PlusCircle
 } from 'lucide-react';
@@ -54,84 +54,84 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 w-72 bg-sidebar transition-transform transform z-20 
-                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+      className={`fixed inset-y-0 left-0 w-[280px] bg-background/95 backdrop-blur-md border-r border-border/50 transition-transform transform z-20
+                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                  lg:translate-x-0 lg:relative`}
     >
-      <div className="h-full flex flex-col text-sidebar-foreground">
-        <div className="h-16 px-4 flex items-center justify-between border-b border-sidebar-border">
+      <div className="h-full flex flex-col">
+        <div className="h-14 md:h-16 px-4 flex items-center justify-between border-b border-border/50">
           <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-r from-w3j-primary to-w3j-secondary p-1.5 rounded-md">
-              <span className="text-white font-bold text-sm">W3J</span>
+            <div className="bg-neural-gradient-purple p-1.5 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a8 8 0 0 0-8 8v12l6.5-6.5H12a8 8 0 0 0 0-16z"></path></svg>
             </div>
-            <h1 className="text-lg font-semibold">Assistant</h1>
+            <h1 className="text-base md:text-lg font-medium">Vocal Vision</h1>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
+            className="lg:hidden h-8 w-8"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </Button>
         </div>
-        
+
         <Button
-          variant="outline"
-          className="m-2 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+          variant="default"
+          className="m-3 bg-neural-gradient-purple hover:bg-purple-600 text-white"
           onClick={onNewSession}
         >
           <PlusCircle className="mr-2 h-4 w-4" /> New Chat
         </Button>
-        
-        <div className="px-2 py-4">
-          <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-sidebar-foreground/70">
-            FEATURES
+
+        <div className="px-3 py-3">
+          <h2 className="mb-2 px-1 text-xs font-medium text-muted-foreground">
+            Features
           </h2>
           <div className="space-y-1">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm h-9"
               onClick={() => navigate('/')}
             >
               <MessageSquare className="mr-2 h-4 w-4" /> Chat
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm h-9"
               onClick={() => handleFeatureClick('File Upload')}
             >
               <Upload className="mr-2 h-4 w-4" /> File Upload
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm h-9"
               onClick={() => handleFeatureClick('Video Chat')}
             >
               <Video className="mr-2 h-4 w-4" /> Video Chat
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm h-9"
               onClick={() => handleFeatureClick('Web Search')}
             >
               <Search className="mr-2 h-4 w-4" /> Web Search
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm h-9"
               onClick={() => handleFeatureClick('Settings')}
             >
               <Settings className="mr-2 h-4 w-4" /> Settings
             </Button>
           </div>
         </div>
-        
-        <Separator className="my-2 bg-sidebar-border" />
-        
-        <div className="flex-grow overflow-auto px-2 py-2">
-          <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-sidebar-foreground/70">
-            HISTORY
+
+        <Separator className="my-2 bg-border/50" />
+
+        <div className="flex-grow overflow-auto px-3 py-2">
+          <h2 className="mb-2 px-1 text-xs font-medium text-muted-foreground">
+            History
           </h2>
           {sessions.length > 0 ? (
             <div className="space-y-1">
@@ -139,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <Button
                   key={session.id}
                   variant={currentSessionId === session.id ? "secondary" : "ghost"}
-                  className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent truncate"
+                  className="w-full justify-start h-9 text-sm truncate"
                   onClick={() => onSessionSelect(session.id)}
                 >
                   <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -148,21 +148,31 @@ const Sidebar: React.FC<SidebarProps> = ({
               ))}
             </div>
           ) : (
-            <p className="px-2 text-xs text-sidebar-foreground/70">No conversation history</p>
+            <div className="px-2 py-4 text-center">
+              <p className="text-xs text-muted-foreground mb-2">No conversation history</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={onNewSession}
+              >
+                Start a new chat
+              </Button>
+            </div>
           )}
         </div>
-        
-        <div className="p-4 border-t border-sidebar-border">
+
+        <div className="p-3 border-t border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <User className="h-4 w-4" />
               </div>
-              <span className="ml-2 text-sm">{user ? user.email : 'Guest User'}</span>
+              <span className="ml-2 text-sm truncate max-w-[160px]">{user ? user.email : 'Guest User'}</span>
             </div>
             {user && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
                 className="h-8 w-8"

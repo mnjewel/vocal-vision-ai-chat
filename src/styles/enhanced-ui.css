@@ -1,0 +1,258 @@
+/* Enhanced UI Styles */
+
+/* Neural Glass Effect */
+.neural-glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .neural-glass {
+  background-color: rgba(30, 30, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.neural-glass-strong {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .neural-glass-strong {
+  background-color: rgba(30, 30, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Neural Shadows */
+.shadow-neural {
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+.dark .shadow-neural {
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.2), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Neural Gradients */
+.bg-neural-gradient-purple {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.bg-neural-gradient-blue {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.bg-neural-gradient-neutral {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Neural Buttons */
+.neural-button {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.neural-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.neural-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.neural-button-ghost {
+  background: transparent;
+  color: #6d28d9;
+  transition: all 0.2s ease;
+}
+
+.dark .neural-button-ghost {
+  color: #a78bfa;
+}
+
+.neural-button-ghost:hover {
+  background-color: rgba(109, 40, 217, 0.1);
+}
+
+.dark .neural-button-ghost:hover {
+  background-color: rgba(167, 139, 250, 0.1);
+}
+
+/* Neural Input */
+.neural-input {
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.neural-input:focus {
+  box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.2);
+}
+
+/* Message Styles */
+.message-user {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  align-self: flex-end;
+}
+
+.dark .message-user {
+  background-color: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.message-assistant {
+  background-color: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  align-self: flex-start;
+}
+
+.dark .message-assistant {
+  background-color: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.message-system {
+  background-color: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.dark .message-system {
+  background-color: rgba(107, 114, 128, 0.15);
+  border: 1px solid rgba(107, 114, 128, 0.1);
+}
+
+/* Neural Messages Container */
+.neural-messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(107, 114, 128, 0.3) transparent;
+}
+
+.neural-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.neural-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.neural-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(107, 114, 128, 0.3);
+  border-radius: 3px;
+}
+
+.dark .neural-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(107, 114, 128, 0.5);
+}
+
+/* Neural Code */
+.neural-code {
+  background-color: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.dark .neural-code {
+  background-color: rgba(15, 23, 42, 0.95);
+}
+
+/* Neural Quote */
+.neural-quote {
+  border-left: 3px solid rgba(139, 92, 246, 0.5);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: rgba(107, 114, 128, 0.9);
+  font-style: italic;
+}
+
+.dark .neural-quote {
+  color: rgba(156, 163, 175, 0.9);
+}
+
+/* Animations */
+@keyframes pulse-gentle {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s infinite ease-in-out;
+}
+
+.animate-pulse-gentle.delay-150 {
+  animation-delay: 0.15s;
+}
+
+.animate-pulse-gentle.delay-300 {
+  animation-delay: 0.3s;
+}
+
+/* Neural Typing Animation */
+.neural-typing {
+  position: relative;
+}
+
+.typing-indicator::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 16px;
+  background-color: currentColor;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Highlight Message Animation */
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.highlight-message {
+  animation: highlight-pulse 2s ease-out;
+}
