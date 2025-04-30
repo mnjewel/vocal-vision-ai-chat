@@ -1,7 +1,7 @@
 
-import { getGroqConfig, hasGroqKey } from '../openai/client';
+import { getGroqConfig, hasGroqKey } from './client';
 
-interface Message {
+export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }

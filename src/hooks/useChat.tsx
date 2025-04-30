@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
-import { createChatCompletion } from '@/integrations/groq/service';
+import { createGroqChatCompletion } from '@/integrations/groq/service';
 import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -220,7 +220,8 @@ export const useChat = () => {
           ));
         }
         
-        const aiResponse = await createChatCompletion({
+        // Update this to use createGroqChatCompletion
+        const response = await createGroqChatCompletion({
           messages: messages
             .filter(m => m.role !== 'system' || messages.indexOf(m) === 0)
             .concat([userMessage])
@@ -231,7 +232,7 @@ export const useChat = () => {
         const assistantMessage: Message = {
           id: generateId(),
           role: 'assistant',
-          content: aiResponse,
+          content: response.content,
           timestamp: new Date(),
           model: model,
         };
@@ -243,7 +244,7 @@ export const useChat = () => {
             id: assistantMessage.id,
             session_id: sessionId,
             role: 'assistant',
-            content: aiResponse,
+            content: response.content,
             model: model
           });
         }
