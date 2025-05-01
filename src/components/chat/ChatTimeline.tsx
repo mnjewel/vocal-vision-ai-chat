@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
+  Calendar, 
   Clock, 
   Search, 
-  MessageSquare, 
   GitBranch, 
-  ChevronDown, 
-  ChevronUp,
-  Calendar,
-  X
+  History,
+  ChevronDown,
+  ChevronRight,
+  MessageSquare,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Message } from '@/hooks/useMessages';
+import { Message } from '@/types/chat';
 import { format } from 'date-fns';
 
 interface ChatTimelineProps {
@@ -22,7 +20,7 @@ interface ChatTimelineProps {
   memorySnapshots: any[];
   branches: any[];
   onSearchMessages: (query: string) => Message[];
-  onJumpToMessage: (messageId: string) => void;
+  onJumpToMessage: (id: string) => void;
   onCreateBranch: () => Promise<string | null>;
 }
 
@@ -40,14 +38,19 @@ const ChatTimeline: React.FC<ChatTimelineProps> = ({
   const [activeTab, setActiveTab] = useState<'timeline' | 'search' | 'branches'>('timeline');
 
   // Group messages by date
-  const messagesByDate = messages.reduce((groups, message) => {
-    const date = format(message.timestamp, 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(message);
-    return groups;
-  }, {} as Record<string, Message[]>);
+  const messagesByDate = React.useMemo(() => {
+    const grouped: Record<string, Message[]> = {};
+    
+    messages.forEach(message => {
+      const dateKey = formatDateKey(message.timestamp);
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(message);
+    });
+    
+    return grouped;
+  }, [messages]);
 
   // Handle search
   const handleSearch = () => {
@@ -197,14 +200,14 @@ const ChatTimeline: React.FC<ChatTimelineProps> = ({
                 {Object.entries(messagesByDate).map(([date, messagesForDate]) => (
                   <div key={date} className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                       <h3 className="text-sm font-medium">
                         {format(new Date(date), 'MMMM d, yyyy')}
                       </h3>
                     </div>
                     
                     <div className="ml-6 border-l border-border pl-4 space-y-2">
-                      {messagesForDate.map(message => (
+                      {messagesForDate.map((message: Message) => (
                         <div 
                           key={message.id}
                           className="flex items-start gap-2 text-sm hover:bg-muted/50 p-1 rounded cursor-pointer"
@@ -315,3 +318,15 @@ const ChatTimeline: React.FC<ChatTimelineProps> = ({
 };
 
 export default ChatTimeline;
+
+function formatDateKey(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+function formatDateDisplay(date: string): string {
+  return format(new Date(date), 'MMMM d, yyyy');
+}
+
+function formatTimeDisplay(date: Date): string {
+  return format(date, 'h:mm a');
+}

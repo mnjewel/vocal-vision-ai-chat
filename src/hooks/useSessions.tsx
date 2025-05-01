@@ -1,302 +1,197 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, ChatSession } from '@/types/chat';
-import { handleError } from '@/utils/errorHandler';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
+import { MemoryManager } from '@/services/MemoryManager';
 
 export const useSessions = () => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
 
-  // Load user's sessions
-  const loadSessions = useCallback(async () => {
-    setIsLoading(true);
-
+  // Fetch sessions from Supabase
+  const fetchSessions = useCallback(async () => {
     try {
-      // Get current user's session if authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // If authenticated, get user's sessions from Supabase
-      if (user) {
-        const { data, error } = await supabase
-          .from('chat_sessions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          throw error;
-        }
-
-        // Convert to ChatSession objects
-        const formattedSessions: ChatSession[] = data.map((session: any) => ({
-          id: session.id,
-          title: session.title,
-          messages: [], // We'll load messages only for the active session
-          createdAt: new Date(session.created_at),
-          updatedAt: new Date(session.updated_at)
-        }));
-
-        setSessions(formattedSessions);
-
-        // Set current session to the first one or create a new one if none exists
-        if (formattedSessions.length > 0 && !currentSessionId) {
-          setCurrentSessionId(formattedSessions[0].id);
-        } else if (formattedSessions.length === 0) {
-          // Create a new session if none exists
-          createNewSession();
-        }
-      } else {
-        // If not authenticated, use local storage for sessions
-        const storedSessions = localStorage.getItem('chat-sessions');
-        
-        if (storedSessions) {
-          const parsedSessions: ChatSession[] = JSON.parse(storedSessions);
-          setSessions(parsedSessions);
-          
-          // Set current session to the first one or create a new one if none exists
-          if (parsedSessions.length > 0 && !currentSessionId) {
-            setCurrentSessionId(parsedSessions[0].id);
-          } else if (parsedSessions.length === 0) {
-            // Create a new session if none exists
-            createNewSession();
-          }
-        } else {
-          // Create a new session if no saved sessions
-          createNewSession();
-        }
+      if (error) {
+        throw error;
       }
-    } catch (error) {
-      handleError(error, 'Failed to load sessions');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentSessionId]);
 
-  // Load sessions on mount
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load conversation history"
+      });
+    }
+  }, []);
+
   useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
+    fetchSessions();
+  }, [fetchSessions]);
 
   // Create a new session
   const createNewSession = useCallback(async () => {
-    if (isCreating) return null;
-    
-    setIsCreating(true);
-    let newSessionId = uuidv4();
+    const newSessionId = uuidv4();
 
     try {
-      // Get current user's session if authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Create new session in Supabase
-        const { data, error } = await supabase
-          .from('chat_sessions')
-          .insert({
-            title: 'New Conversation',
-            user_id: user.id
-          })
-          .select();
-
-        if (error) {
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          newSessionId = data[0].id;
-        }
-      }
-
-      // Create new session object
-      const newSession: ChatSession = {
+      const { error } = await supabase.from('chat_sessions').insert({
         id: newSessionId,
+        user_id: '00000000-0000-0000-0000-000000000000', // This should be the actual user ID
         title: 'New Conversation',
-        messages: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      });
 
-      // Update state
-      setSessions(prev => [newSession, ...prev]);
-      setCurrentSessionId(newSessionId);
-
-      // If not authenticated, update local storage
-      if (!(await supabase.auth.getUser()).data.user) {
-        const storedSessions = localStorage.getItem('chat-sessions');
-        const existingSessions: ChatSession[] = storedSessions ? JSON.parse(storedSessions) : [];
-        localStorage.setItem('chat-sessions', JSON.stringify([newSession, ...existingSessions]));
+      if (error) {
+        throw error;
       }
 
+      await fetchSessions();
+      setCurrentSessionId(newSessionId);
       return newSessionId;
     } catch (error) {
-      handleError(error, 'Failed to create new session');
+      console.error('Error creating session:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create new conversation"
+      });
       return null;
-    } finally {
-      setIsCreating(false);
     }
-  }, [isCreating]);
+  }, [fetchSessions]);
 
   // Get current session
   const getCurrentSession = useCallback(() => {
-    if (!currentSessionId) return null;
-    return sessions.find(s => s.id === currentSessionId) || null;
+    return sessions.find(session => session.id === currentSessionId);
   }, [sessions, currentSessionId]);
 
   // Update session title
   const updateSessionTitle = useCallback(async (sessionId: string, title: string) => {
     try {
-      // Update local state
-      setSessions(prev => prev.map(s => 
-        s.id === sessionId ? { ...s, title, updatedAt: new Date() } : s
-      ));
+      const { error } = await supabase
+        .from('chat_sessions')
+        .update({ title })
+        .eq('id', sessionId);
 
-      // Get current user's session if authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('chat_sessions')
-          .update({
-            title,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sessionId);
-
-        if (error) {
-          throw error;
-        }
-      } else {
-        // Update in local storage
-        const storedSessions = localStorage.getItem('chat-sessions');
-        if (storedSessions) {
-          const existingSessions: ChatSession[] = JSON.parse(storedSessions);
-          const updatedSessions = existingSessions.map(s => 
-            s.id === sessionId ? { ...s, title, updatedAt: new Date() } : s
-          );
-          localStorage.setItem('chat-sessions', JSON.stringify(updatedSessions));
-        }
+      if (error) {
+        throw error;
       }
-    } catch (error) {
-      handleError(error, 'Failed to update session title');
-    }
-  }, []);
 
-  // Delete session
+      await fetchSessions();
+    } catch (error) {
+      console.error('Error updating session title:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update conversation title"
+      });
+    }
+  }, [fetchSessions]);
+
+  // Delete a session
   const deleteSession = useCallback(async (sessionId: string) => {
     try {
-      // Get current user's session if authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Delete from Supabase - messages will cascade delete due to foreign key
-        const { error } = await supabase
-          .from('chat_sessions')
-          .delete()
-          .eq('id', sessionId);
+      const { error } = await supabase
+        .from('chat_sessions')
+        .delete()
+        .eq('id', sessionId);
 
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw error;
       }
 
-      // Update state
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
-      
-      // If deleting current session, set to first remaining session or create a new one
-      if (currentSessionId === sessionId) {
-        const remainingSessions = sessions.filter(s => s.id !== sessionId);
-        if (remainingSessions.length > 0) {
-          setCurrentSessionId(remainingSessions[0].id);
-        } else {
-          createNewSession();
-        }
-      }
-
-      // If not authenticated, update local storage
-      if (!user) {
-        const storedSessions = localStorage.getItem('chat-sessions');
-        if (storedSessions) {
-          const existingSessions: ChatSession[] = JSON.parse(storedSessions);
-          const updatedSessions = existingSessions.filter(s => s.id !== sessionId);
-          localStorage.setItem('chat-sessions', JSON.stringify(updatedSessions));
-        }
-      }
+      await fetchSessions();
+      setCurrentSessionId(null);
     } catch (error) {
-      handleError(error, 'Failed to delete session');
+      console.error('Error deleting session:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete conversation"
+      });
     }
-  }, [sessions, currentSessionId, createNewSession]);
+  }, [fetchSessions]);
 
   // Export conversation
-  const exportConversation = useCallback((messages: Message[]) => {
-    try {
-      const session = getCurrentSession();
-      if (!session) return;
-
-      // Format messages as markdown
-      const markdown = formatMessagesAsMarkdown(messages, session.title);
-      
-      // Create a blob and trigger download
-      const blob = new Blob([markdown], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${session.title.replace(/\s+/g, '-').toLowerCase()}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      handleError(error, 'Failed to export conversation');
+  const exportConversation = useCallback((messages: any[]) => {
+    if (!messages || messages.length === 0) {
+      toast({
+        title: "Info",
+        description: "No messages to export"
+      });
+      return;
     }
-  }, [getCurrentSession]);
+
+    // Format messages to markdown
+    const markdown = messages.map(message => {
+      const timestamp = new Date(message.timestamp).toLocaleString();
+      return `**${message.role}** (${timestamp}):\n${message.content}\n\n`;
+    }).join('');
+
+    // Create a file and download it
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'conversation.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
 
   // Fork conversation
-  const forkConversation = useCallback(async (memoryManager: any) => {
-    try {
-      if (!memoryManager) return null;
-      
-      // Use memory manager to create branch
-      const newSessionId = await memoryManager.createBranch();
-      
-      if (!newSessionId) {
-        throw new Error('Failed to create branch');
-      }
-      
-      // Now load the sessions to update our state with the new branch
-      await loadSessions();
-      
-      // Set the current session to the new branch
-      setCurrentSessionId(newSessionId);
-      
-      return newSessionId;
-    } catch (error) {
-      handleError(error, 'Failed to fork conversation');
+  const forkConversation = async (memoryManager: MemoryManager | null): Promise<string | null> => {
+    if (!memoryManager) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fork conversation"
+      });
       return null;
     }
-  }, [loadSessions]);
 
-  // Helper function to format messages as markdown
-  const formatMessagesAsMarkdown = (messages: Message[], title: string): string => {
-    let markdown = `# ${title}\n\n`;
-    
-    for (const message of messages) {
-      const role = message.role === 'assistant' ? 'AI' : message.role === 'user' ? 'You' : 'System';
-      markdown += `## ${role}\n\n${message.content}\n\n`;
+    try {
+      // Create branch using memory manager
+      const newSessionId = await memoryManager.createBranch();
+
+      if (!newSessionId) {
+        throw new Error("Failed to create branch");
+      }
+
+      // Update sessions list by fetching latest
+      await fetchSessions();
+
+      // Switch to new session
+      setCurrentSessionId(newSessionId);
+
+      toast({
+        title: "Success",
+        description: "Conversation forked successfully"
+      });
+
+      return newSessionId; // Ensure we return a string here
+    } catch (error) {
+      console.error('Error forking conversation:', error);
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fork conversation"
+      });
+      
+      return null;
     }
-    
-    return markdown;
   };
 
   return {
     sessions,
     currentSessionId,
     setCurrentSessionId,
-    isLoading,
     createNewSession,
     getCurrentSession,
     updateSessionTitle,

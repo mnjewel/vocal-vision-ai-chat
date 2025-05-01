@@ -5,10 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export interface ModelSelectorProps {
   selectedModel: string;
   onSelectModel: (model: string) => void;
+  onModelChange?: (model: string) => void; // Adding this for backwards compatibility
   compact?: boolean;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onSelectModel, compact = false }) => {
+const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onSelectModel, onModelChange, compact = false }) => {
+  // Handle model selection with both callbacks for backwards compatibility
+  const handleModelChange = (model: string) => {
+    onSelectModel(model);
+    if (onModelChange) {
+      onModelChange(model);
+    }
+  };
+
   const models = [
     { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
     { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
@@ -23,7 +32,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onSelectMo
   return (
     <Select
       value={selectedModel}
-      onValueChange={onSelectModel}
+      onValueChange={handleModelChange}
     >
       <SelectTrigger className={`bg-white/80 dark:bg-gray-800/80 text-sm ${compact ? 'h-8 text-xs' : ''}`}>
         <SelectValue placeholder="Select model" />

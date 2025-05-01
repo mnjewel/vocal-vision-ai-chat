@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { ChatSession } from '@/types/chat'; // Updated import from types instead of useChat
 import { Separator } from '@/components/ui/separator';
-import { ChatSession } from '@/hooks/useChat';
 import {
   MessageSquare,
   User,

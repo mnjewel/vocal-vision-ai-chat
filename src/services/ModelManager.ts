@@ -1,25 +1,8 @@
 
 // If this file doesn't exist yet, this will create it
-import { Message } from '@/types/chat';
-
-export interface Persona {
-  id: string;
-  name: string;
-  description: string;
-  systemPrompt: string;
-  suitableModels: string[];
-}
-
-export interface ModelCapability {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-}
+import { type Persona, type ModelCapability } from '@/types/chat';
 
 class ModelManagerService {
-  private defaultModel = 'llama-3.3-70b-versatile';
-  
   private modelCapabilities: Record<string, ModelCapability[]> = {
     'llama3-8b-8192': [{ id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' }],
     'llama3-70b-8192': [
@@ -109,7 +92,7 @@ class ModelManagerService {
     return persona?.systemPrompt || this.personas[0].systemPrompt;
   }
 
-  // Added functions to fix type errors
+  // Added functions for compatibility
   getContextWindowSize(model: string): number {
     const modelSizes: Record<string, number> = {
       'llama3-8b-8192': 8192,
@@ -139,3 +122,4 @@ class ModelManagerService {
 }
 
 export const ModelManager = new ModelManagerService();
+export type { Persona as ModelPersona };

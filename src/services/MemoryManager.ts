@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { Message } from '@/types/chat';
+import { Message, MessageRole } from '@/types/chat';
 
 export class MemoryManager {
   sessionId: string;
@@ -29,9 +29,9 @@ export class MemoryManager {
       // Convert to Message objects
       this.activeMessages = messagesData.map(m => ({
         id: m.id,
-        role: m.role,
+        role: m.role as MessageRole, // Cast to MessageRole
         content: m.content,
-        timestamp: new Date(m.created_at),
+        timestamp: new Date(m.created_at || Date.now()), // Provide fallback
       }));
 
       try {

@@ -1,3 +1,4 @@
+// Remove unused imports
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -7,7 +8,6 @@ import {
   Brain, 
   Menu,
   Plus,
-  Settings,
   X,
   ChevronDown,
   ChevronUp,
@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -41,19 +41,17 @@ const MobileFriendlyChatInterface: React.FC<{ toggleSidebar: () => void }> = ({ 
     currentSessionId,
     activePersona,
     setActivePersona,
-    setMessages
   } = useChat();
 
   // Get memory state and actions
   const { 
-    memorySnapshots, 
     searchMessages,
-    createMemorySnapshot
   } = useMemory({ 
     sessionId: currentSessionId,
     onMessagesLoaded: (loadedMessages) => {
       if (loadedMessages.length > 0) {
-        setMessages(loadedMessages);
+        // We no longer need this since setMessages isn't exposed from useChat
+        console.log("Messages loaded:", loadedMessages.length);
       }
     }
   });

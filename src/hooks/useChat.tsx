@@ -4,8 +4,6 @@ import { MemoryManager } from '@/services/MemoryManager';
 import useMessages from './useMessages';
 import useSessions from './useSessions';
 import usePersona from './usePersona';
-import useModelCapabilities from './useModelCapabilities';
-import { Message } from '@/types/chat';
 
 export const useChat = () => {
   // Create a ref to store the MemoryManager instance
@@ -19,7 +17,6 @@ export const useChat = () => {
     createNewSession,
     getCurrentSession,
     updateSessionTitle,
-    deleteSession,
     exportConversation,
     forkConversation
   } = useSessions();
@@ -27,19 +24,7 @@ export const useChat = () => {
   const {
     activePersona,
     setActivePersona,
-    getAvailablePersonas,
-    isPersonaSuitableForModel,
-    getSystemPrompt,
-    changePersona,
-    getCurrentPersona
   } = usePersona();
-
-  const {
-    getCapabilitiesForModel,
-    isAgentic,
-    getContextWindowSize,
-    supportsImageInput
-  } = useModelCapabilities();
 
   // Initialize memory manager when session changes
   useEffect(() => {
@@ -71,7 +56,6 @@ export const useChat = () => {
     deleteMessage,
     updatePendingMessage,
     loadSessionMessages,
-    setMessages
   } = useMessages({
     memoryManager: memoryManagerRef.current,
     currentSessionId,
@@ -112,7 +96,6 @@ export const useChat = () => {
     sendMessage,
     deleteMessage,
     updatePendingMessage,
-    setMessages,
 
     // Session state and actions
     sessions,

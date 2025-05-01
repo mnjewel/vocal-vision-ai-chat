@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ModelManager } from '@/services/ModelManager';
 import { MemoryManager } from '@/services/MemoryManager';
-import { Message, MessageRole } from '@/types/chat';
+import { Message } from '@/types/chat';
 
 const generateId = () => uuidv4();
 
@@ -118,7 +118,7 @@ export const useMessages = ({
         }
 
         // Get system prompt based on model and persona
-        const systemPrompt = ModelManager.getSystemPrompt(model, activePersona);
+        const systemPrompt = ModelManager.getSystemPrompt(activePersona);
 
         // Add system prompt to the context if it's not already there
         let contextMessages = [];

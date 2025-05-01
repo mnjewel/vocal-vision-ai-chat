@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { hasGroqKey, removeGroqKey } from '@/integrations/groq/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -23,9 +23,7 @@ const ChatInterface: React.FC = () => {
   const {
     messages,
     isTyping,
-    pendingMessage,
     sendMessage,
-    updatePendingMessage,
     deleteMessage,
     activePersona,
     setActivePersona,
@@ -45,7 +43,7 @@ const ChatInterface: React.FC = () => {
   const { user } = useAuthContext();
 
   // Get settings from store
-  const { showAgentTools, defaultModel } = useSettingsStore();
+  const { defaultModel } = useSettingsStore();
   const [selectedModel, setSelectedModel] = useState<string>(defaultModel);
 
   // Check if model is agentic
@@ -150,13 +148,6 @@ const ChatInterface: React.FC = () => {
   // Handle API key saved
   const handleKeySaved = () => {
     setShowAPIKeyInput(false);
-  };
-
-  // Handle API key reset
-  const handleResetGroqKey = () => {
-    removeGroqKey();
-    setActiveAPITab('groq');
-    setShowAPIKeyInput(true);
   };
 
   // Handle fork conversation

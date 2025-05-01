@@ -1,26 +1,24 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Brain, FileText, Code, Hash } from 'lucide-react';
-import { ModelPersona } from '@/services/ModelManager';
+import { type Persona } from '@/types/chat';
+import { FileText, Code, Hash, Brain } from 'lucide-react';
 
 interface PersonaSelectorProps {
+  personas: Persona[];
   activePersona: string;
-  availablePersonas: ModelPersona[];
   onPersonaChange: (personaId: string) => void;
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  onClose: () => void;
 }
 
 const PersonaSelector: React.FC<PersonaSelectorProps> = ({
+  personas,
   activePersona,
-  availablePersonas,
   onPersonaChange,
-  isOpen,
-  setIsOpen
+  onClose
 }) => {
-  const currentPersona = availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
+  const currentPersona = personas.find(p => p.id === activePersona) || personas[0];
 
   return (
     <>
@@ -31,7 +29,7 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
               variant="outline"
               size="sm"
               className="h-8 gap-1.5"
-              onClick={() => setIsOpen(true)}
+              onClick={() => onClose()}
             >
               <Brain className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{currentPersona.id === 'default' ? 'Personas' : currentPersona.name}</span>
@@ -43,14 +41,14 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
         </Tooltip>
       </TooltipProvider>
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={false} onOpenChange={() => {}}>
         <PopoverContent className="w-72 p-0" side="top">
           <div className="p-3 border-b">
             <h3 className="text-sm font-medium">Select Persona</h3>
             <p className="text-xs text-muted-foreground">Choose how the assistant behaves</p>
           </div>
           <div className="py-2 max-h-60 overflow-y-auto">
-            {availablePersonas.map(persona => (
+            {personas.map(persona => (
               <button
                 type="button"
                 key={persona.id}
