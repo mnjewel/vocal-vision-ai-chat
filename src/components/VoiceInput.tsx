@@ -2,7 +2,8 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import useSpeechRecognition from '@/hooks/useSpeechRecognition';
-import { Mic } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 export interface VoiceInputProps {
   onTranscriptComplete: (transcript: string) => void;
@@ -35,10 +36,20 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscriptComplete, children 
 
   // Toggle listening state
   const toggleListening = () => {
+    if (!isSupported) {
+      toast.error("Speech recognition is not supported in your browser");
+      return;
+    }
+    
     if (isListening) {
       stopListening();
     } else {
-      startListening();
+      try {
+        startListening();
+      } catch (error) {
+        console.error("Error starting speech recognition:", error);
+        toast.error("Could not access microphone. Please check permissions.");
+      }
     }
   };
 
@@ -61,7 +72,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscriptComplete, children 
           className={`relative ${isListening ? 'animate-pulse' : ''}`}
           title={isSupported ? 'Click to speak' : 'Voice input not supported in your browser'}
         >
-          <Mic className={`h-4 w-4 ${isListening ? 'text-white' : ''}`} />
+          {isListening ? <MicOff className="h-4 w-4 text-white" /> : <Mic className="h-4 w-4" />}
           {isListening && (
             <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
           )}

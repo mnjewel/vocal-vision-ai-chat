@@ -17,7 +17,7 @@ import ModelCapabilitiesBanner from './ModelCapabilitiesBanner';
 import ConversationActions from './ConversationActions';
 import SettingsDialog from '../SettingsDialog';
 
-const MobileFriendlyChatInterface: React.FC<{ toggleSidebar: () => void }> = () => {
+const MobileFriendlyChatInterface: React.FC = () => {
   // State from useChat hook
   const {
     messages,

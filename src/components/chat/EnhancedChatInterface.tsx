@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
   Mic, 
+  MicOff,
   Image as ImageIcon, 
   Brain, 
   GitBranch, 
@@ -12,13 +13,15 @@ import {
   Hash,
   FileText,
   X,
-  Sparkles
+  Sparkles,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Popover, PopoverContent } from '@/components/ui/popover';
+import { Avatar, AvatarFallback } from '@/components/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { hasGroqKey } from '@/integrations/groq/client';
@@ -199,7 +202,6 @@ const EnhancedChatInterface: React.FC = () => {
   };
 
   // Get available personas for the current model
-  // This function is used in the render, so we keep it
   const getAvailablePersonas = () => {
     return ModelManager.getAvailablePersonasForModel(selectedModel);
   };
@@ -329,7 +331,7 @@ const EnhancedChatInterface: React.FC = () => {
             <p className="text-xs text-muted-foreground">Choose how the assistant behaves</p>
           </div>
           <div className="py-2 max-h-60 overflow-y-auto">
-            {getAvailablePersonas().map(persona => (
+            {getAvailablePersonas().map((persona: any) => (
               <button
                 key={persona.id}
                 className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${

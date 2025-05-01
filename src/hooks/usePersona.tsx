@@ -5,7 +5,7 @@ import { ModelManager } from '@/services/ModelManager';
 import { toast } from '@/components/ui/use-toast';
 
 export const usePersona = () => {
-  // Initialize with a default persona if defaultPersona is not set in settings
+  // Initialize with a default persona
   const [activePersona, setActivePersona] = useState(
     useSettingsStore.getState().defaultModel ? 'default' : 'default'
   );
