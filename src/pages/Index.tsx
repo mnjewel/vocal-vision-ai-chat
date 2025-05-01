@@ -5,10 +5,11 @@ import Sidebar from '@/components/Sidebar';
 import EnhancedChatInterface from '@/components/chat/EnhancedChatInterface';
 import MobileFriendlyChatInterface from '@/components/chat/MobileFriendlyChatInterface';
 import useChat from '@/hooks/useChat';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   const {
     sessions,
@@ -17,22 +18,6 @@ const Index = () => {
     createNewSession,
   } = useChat();
 
-  // Check if the device is mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener('resize', checkIfMobile);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
-
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -40,9 +25,9 @@ const Index = () => {
   return (
     <div className="min-h-screen flex w-full neural-app-bg">
       {/* Overlay when sidebar is open on mobile */}
-      {sidebarOpen && (
+      {sidebarOpen && isMobile && (
         <div
-          className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

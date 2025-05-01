@@ -111,6 +111,9 @@ export const MODEL_PERSONAS: ModelPersona[] = [
 ];
 
 class ModelManagerService {
+  // Add MODEL_PERSONAS property to fix TypeScript errors
+  MODEL_PERSONAS = MODEL_PERSONAS;
+  
   getSystemPrompt(modelId: string, personaId: string = 'default'): string {
     // Find the requested persona or fall back to default
     const persona = MODEL_PERSONAS.find(p => p.id === personaId) || MODEL_PERSONAS.find(p => p.id === 'default')!;
