@@ -112,6 +112,7 @@ export const useChat = () => {
     sendMessage,
     deleteMessage,
     updatePendingMessage,
+    setMessages,
 
     // Session state and actions
     sessions,

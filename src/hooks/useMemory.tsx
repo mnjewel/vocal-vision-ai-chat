@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { MemoryManager } from '@/services/MemoryManager';
-import { Message, MessageRole } from '@/hooks/useChat';
+import { Message } from '@/types/chat';
 import { v4 as uuidv4 } from 'uuid';
 
 interface UseMemoryProps {
@@ -39,8 +40,13 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
       const messages = await memoryManagerRef.current.loadSessionMessages(sessionId);
       
       // Update branches and snapshots state
-      setBranches(memoryManagerRef.current.branches);
-      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+      if (memoryManagerRef.current.branches) {
+        setBranches(memoryManagerRef.current.branches);
+      }
+      
+      if (memoryManagerRef.current.memorySnapshots) {
+        setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+      }
       
       // Notify parent component about loaded messages
       if (onMessagesLoaded) {
@@ -60,7 +66,9 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     await memoryManagerRef.current.saveMessage(message);
     
     // Update snapshots state if new ones were created
-    setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    if (memoryManagerRef.current.memorySnapshots) {
+      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    }
   }, []);
 
   // Delete a message from memory
@@ -70,7 +78,9 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     await memoryManagerRef.current.deleteMessage(messageId);
     
     // Update snapshots state
-    setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    if (memoryManagerRef.current.memorySnapshots) {
+      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    }
   }, []);
 
   // Get context window for AI processing
@@ -87,7 +97,9 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     const newSessionId = await memoryManagerRef.current.createBranch();
     
     // Update branches state
-    setBranches(memoryManagerRef.current.branches);
+    if (memoryManagerRef.current.branches) {
+      setBranches(memoryManagerRef.current.branches);
+    }
     
     return newSessionId;
   }, []);
@@ -111,14 +123,16 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     await memoryManagerRef.current.createMemorySnapshot();
     
     // Update snapshots state
-    setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    if (memoryManagerRef.current.memorySnapshots) {
+      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
+    }
   }, []);
 
   // Get all active messages
   const getActiveMessages = useCallback(() => {
     if (!memoryManagerRef.current) return [];
     
-    return memoryManagerRef.current.activeMessages;
+    return memoryManagerRef.current.activeMessages || [];
   }, []);
 
   return {

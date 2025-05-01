@@ -1,299 +1,186 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole } from '@/types/chat';
-
-interface MemorySnapshot {
-  id: string;
-  timestamp: string;
-  summary: string;
-  messageIds: string[];
-}
-
-interface Branch {
-  id: string;
-  parentId: string;
-  name: string;
-  createdAt: string;
-}
-
-export interface SessionData {
-  id: string;
-  title: string;
-  model?: string;
-  created_at: string;
-  user_id?: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/types/chat';
 
 export class MemoryManager {
   sessionId: string;
-  activeMessages: Message[];
-  memorySnapshots: MemorySnapshot[];
-  branches: Branch[];
+  activeMessages: Message[] = [];
+  branches: any[] = [];
+  memorySnapshots: any[] = [];
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
-    this.activeMessages = [];
-    this.memorySnapshots = [];
-    this.branches = [];
   }
 
-  // Load messages from a specific session
   async loadSessionMessages(sessionId: string): Promise<Message[]> {
     try {
-      // Get messages from Supabase
-      const { data: messages, error } = await supabase
+      // Load messages from Supabase
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select('*')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching messages:', error);
-        return [];
+      if (messagesError) {
+        throw messagesError;
       }
 
-      // Transform Supabase message format to app Message format
-      const formattedMessages = messages?.map(msg => ({
-        id: msg.id,
-        role: msg.role as MessageRole,
-        content: msg.content,
-        timestamp: new Date(msg.created_at).toISOString(),
-        sessionId: msg.session_id,
-      })) || [];
+      // Convert to Message objects
+      this.activeMessages = messagesData.map(m => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.created_at),
+      }));
 
-      // Set active messages for this session
-      this.activeMessages = formattedMessages;
-      
-      // Load memory snapshots
-      await this.loadMemorySnapshots(sessionId);
-      
-      // Load branches
-      await this.loadBranches();
+      try {
+        // Try to load branches
+        await this.loadBranches();
+      } catch (error) {
+        console.error('Error loading branches:', error);
+      }
 
-      return formattedMessages;
+      return this.activeMessages;
     } catch (error) {
-      console.error('Error in loadSessionMessages:', error);
+      console.error('Error loading messages:', error);
       return [];
     }
   }
 
-  // Load branches for this session
   async loadBranches(): Promise<void> {
+    // Fetch branches from Supabase (sessions with this session as parent)
     try {
-      // Query requires 'parent_id' column to exist in the chat_sessions table
-      const { data: branchesData, error } = await supabase
+      const { data, error } = await supabase
         .from('chat_sessions')
-        .select('id, parent_id, title, created_at')
+        .select('*')
         .eq('parent_id', this.sessionId);
 
       if (error) {
-        console.error('Error loading branches:', error);
-        this.branches = [];
-        return;
+        throw error;
       }
 
-      if (branchesData) {
-        this.branches = branchesData.map(branch => ({
-          id: branch.id,
-          parentId: branch.parent_id,
-          name: branch.title,
-          createdAt: branch.created_at
-        }));
-      }
+      this.branches = data || [];
     } catch (error) {
-      console.error('Error in loadBranches:', error);
-      this.branches = [];
+      console.error('Error loading branches:', error);
     }
   }
 
-  // Save a new session to the database
-  async saveSession(sessionData: SessionData): Promise<string | null> {
-    try {
-      // We need to include user_id if the table requires it
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .insert({
-          id: sessionData.id,
-          title: sessionData.title,
-          created_at: sessionData.created_at,
-          user_id: sessionData.user_id || 'anonymous' // Using 'anonymous' as fallback
-        })
-        .select();
+  async createSnapshot(): Promise<void> {
+    // Create a snapshot of the current state
+    const snapshot = {
+      id: uuidv4(),
+      sessionId: this.sessionId,
+      messages: [...this.activeMessages],
+      timestamp: new Date(),
+    };
 
-      if (error) {
-        console.error('Error saving session:', error);
-        return null;
-      }
-
-      return data?.[0]?.id || null;
-    } catch (error) {
-      console.error('Error in saveSession:', error);
-      return null;
-    }
+    this.memorySnapshots.push(snapshot);
   }
 
-  // Create a new branch from the current conversation
-  async createBranch(): Promise<string | null> {
-    try {
-      const branchId = uuidv4();
-      const branchTitle = `Branch from ${this.sessionId}`;
-      
-      const newSessionData: SessionData = {
-        id: branchId,
-        title: branchTitle,
-        created_at: new Date().toISOString(),
-        user_id: 'anonymous' // Using 'anonymous' as fallback
-      };
-      
-      // Save the new session
-      const savedSessionId = await this.saveSession(newSessionData);
-      
-      if (!savedSessionId) {
-        return null;
-      }
-      
-      // Clone messages to the new branch
-      for (const message of this.activeMessages) {
-        await this.saveMessageToBranch(message, branchId);
-      }
-      
-      // Update branches list
-      this.branches.push({
-        id: branchId,
-        parentId: this.sessionId,
-        name: branchTitle,
-        createdAt: new Date().toISOString()
-      });
-      
-      return branchId;
-    } catch (error) {
-      console.error('Error in createBranch:', error);
-      return null;
-    }
-  }
-
-  // Save a message to a specific branch
-  async saveMessageToBranch(message: Message, branchId: string): Promise<void> {
-    try {
-      await supabase
-        .from('messages')
-        .insert({
-          id: uuidv4(),
-          content: message.content,
-          role: message.role,
-          session_id: branchId,
-          created_at: new Date().toISOString()
-        });
-    } catch (error) {
-      console.error('Error in saveMessageToBranch:', error);
-    }
-  }
-
-  // Save a message to the current session
   async saveMessage(message: Message): Promise<void> {
     try {
+      // Save to local state
+      this.activeMessages.push(message);
+
       // Save to Supabase
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          id: message.id || uuidv4(),
-          content: message.content,
-          role: message.role,
-          session_id: this.sessionId,
-          created_at: new Date(message.timestamp || Date.now()).toISOString()
-        });
+      const { error } = await supabase.from('messages').insert({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        session_id: this.sessionId,
+        created_at: message.timestamp ? message.timestamp.toISOString() : new Date().toISOString(),
+      });
 
       if (error) {
-        console.error('Error saving message:', error);
-        return;
+        throw error;
       }
 
-      // Update local active messages
-      this.activeMessages.push(message);
-      
-      // Create a memory snapshot periodically
-      if (this.shouldCreateSnapshot()) {
-        await this.createMemorySnapshot();
+      // Create a new snapshot occasionally
+      if (this.activeMessages.length % 10 === 0) {
+        await this.createSnapshot();
       }
     } catch (error) {
-      console.error('Error in saveMessage:', error);
+      console.error('Error saving message:', error);
     }
   }
 
-  // Delete a message
   async deleteMessage(messageId: string): Promise<void> {
     try {
-      // Delete from Supabase
+      // Remove from local state
+      this.activeMessages = this.activeMessages.filter(m => m.id !== messageId);
+
+      // Remove from Supabase
       const { error } = await supabase
         .from('messages')
         .delete()
         .eq('id', messageId);
 
       if (error) {
-        console.error('Error deleting message:', error);
-        return;
+        throw error;
       }
 
-      // Update local active messages
-      this.activeMessages = this.activeMessages.filter(msg => msg.id !== messageId);
+      // Create a new snapshot after deletion
+      await this.createSnapshot();
     } catch (error) {
-      console.error('Error in deleteMessage:', error);
+      console.error('Error deleting message:', error);
     }
   }
 
-  // Search through messages
-  searchMessages(query: string): Message[] {
-    if (!query.trim()) {
-      return [];
-    }
-
-    const lowerQuery = query.toLowerCase();
-    return this.activeMessages.filter(msg => 
-      msg.content.toLowerCase().includes(lowerQuery)
-    );
-  }
-
-  // Load memory snapshots for a session
-  async loadMemorySnapshots(sessionId: string): Promise<void> {
-    // Implement snapshot loading from database
-    // This is a placeholder - in a real implementation, you would fetch snapshots from Supabase
-    this.memorySnapshots = [];
-  }
-
-  // Create a memory snapshot
-  async createMemorySnapshot(): Promise<void> {
-    // Create a snapshot of the current context
-    const snapshot: MemorySnapshot = {
-      id: uuidv4(),
-      timestamp: new Date().toISOString(),
-      summary: this.generateSummary(),
-      messageIds: this.activeMessages.map(msg => msg.id || '')
-    };
-    
-    this.memorySnapshots.push(snapshot);
-    
-    // In a real implementation, you would save this to Supabase
-    console.log('Memory snapshot created:', snapshot);
-  }
-
-  // Generate a summary of the conversation
-  private generateSummary(): string {
-    // This is a placeholder - in a real implementation, you would use an LLM to generate a summary
-    const messageCount = this.activeMessages.length;
-    return `Conversation with ${messageCount} messages`;
-  }
-
-  // Determine if we should create a new snapshot
-  private shouldCreateSnapshot(): boolean {
-    // Create a snapshot every 10 messages
-    return this.activeMessages.length % 10 === 0 && this.activeMessages.length > 0;
-  }
-
-  // Get context window for AI processing
   getContextWindow(): Message[] {
-    // Simple implementation: just return all active messages
-    // In a real implementation, you might want to limit the context window size
+    // Return messages for context window (possibly with some filtering/processing)
     return this.activeMessages;
+  }
+
+  async createBranch(): Promise<string | null> {
+    try {
+      // Create a new session with this session as parent
+      const newSessionId = uuidv4();
+      const { error } = await supabase.from('chat_sessions').insert({
+        id: newSessionId,
+        user_id: '00000000-0000-0000-0000-000000000000', // This should be the actual user ID
+        title: 'Branched Conversation',
+        parent_id: this.sessionId,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Copy messages to the new branch
+      for (const message of this.activeMessages) {
+        await supabase.from('messages').insert({
+          id: uuidv4(),
+          role: message.role,
+          content: message.content,
+          session_id: newSessionId,
+          created_at: message.timestamp ? message.timestamp.toISOString() : new Date().toISOString(),
+        });
+      }
+
+      // Add to branches
+      this.branches.push({
+        id: newSessionId,
+        parent_id: this.sessionId,
+        title: 'Branched Conversation',
+      });
+
+      return newSessionId;
+    } catch (error) {
+      console.error('Error creating branch:', error);
+      return null;
+    }
+  }
+
+  async createMemorySnapshot(): Promise<void> {
+    await this.createSnapshot();
+  }
+
+  searchMessages(query: string): Message[] {
+    // Simple search implementation - can be enhanced
+    const lowerQuery = query.toLowerCase();
+    return this.activeMessages.filter(m => 
+      m.content.toLowerCase().includes(lowerQuery)
+    );
   }
 }

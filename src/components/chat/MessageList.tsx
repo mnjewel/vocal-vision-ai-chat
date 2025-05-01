@@ -1,8 +1,9 @@
+
 import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback } from '@/components/Avatar';
 import ChatMessage from '../ChatMessage';
-import { Message } from '@/hooks/useChat';
+import { Message } from '@/types/chat';
 
 interface MessageListProps {
   messages: Message[];
@@ -44,7 +45,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onDeleteM
             </div>
             <div>
               <div className="flex items-center mb-1">
-                <span className="font-medium mr-2">W3J Assistant</span>
+                <span className="font-medium mr-2">Assistant</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">typing...</span>
               </div>
               <div className="flex space-x-1">

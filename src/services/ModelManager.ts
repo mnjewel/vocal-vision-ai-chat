@@ -1,16 +1,8 @@
 
-import { getAvailableGroqModels } from '@/integrations/groq/service';
+// If this file doesn't exist yet, this will create it
+import { Message } from '@/types/chat';
 
-export interface ModelCapability {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  requiresModel: string[];
-  isAvailable: (model: string) => boolean;
-}
-
-export interface ModelPersona {
+export interface Persona {
   id: string;
   name: string;
   description: string;
@@ -18,158 +10,131 @@ export interface ModelPersona {
   suitableModels: string[];
 }
 
-export const MODEL_CAPABILITIES: ModelCapability[] = [
-  {
-    id: 'web_search',
-    name: 'Web Search',
-    description: 'Can search the web for current information',
-    icon: 'search',
-    requiresModel: ['compound-beta', 'compound-beta-mini'],
-    isAvailable: (model: string) => ['compound-beta', 'compound-beta-mini'].includes(model)
-  },
-  {
-    id: 'code_execution',
-    name: 'Code Execution',
-    description: 'Can run and analyze code',
-    icon: 'code',
-    requiresModel: ['compound-beta', 'compound-beta-mini'],
-    isAvailable: (model: string) => ['compound-beta', 'compound-beta-mini'].includes(model)
-  },
-  {
-    id: 'long_context',
-    name: 'Long Context',
-    description: 'Handles extended context windows',
-    icon: 'file-text',
-    requiresModel: [
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'gemma2-9b-it',
-      'deepseek-r1-distill-llama-70b'
-    ],
-    isAvailable: (model: string) => [
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'gemma2-9b-it',
-      'deepseek-r1-distill-llama-70b'
-    ].includes(model)
-  },
-  {
-    id: 'vision',
-    name: 'Vision',
-    description: 'Can analyze and understand images',
-    icon: 'image',
-    requiresModel: ['llama-3.3-70b-versatile', 'compound-beta'],
-    isAvailable: (model: string) => ['llama-3.3-70b-versatile', 'compound-beta'].includes(model)
-  },
-  {
-    id: 'memory',
-    name: 'Enhanced Memory',
-    description: 'Maintains context across long conversations',
-    icon: 'brain',
-    requiresModel: ['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'],
-    isAvailable: (model: string) => ['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'].includes(model)
-  },
-  {
-    id: 'tools',
-    name: 'Tool Use',
-    description: 'Can use external tools to accomplish tasks',
-    icon: 'tool',
-    requiresModel: ['compound-beta', 'compound-beta-mini'],
-    isAvailable: (model: string) => ['compound-beta', 'compound-beta-mini'].includes(model)
-  }
-];
-
-export const MODEL_PERSONAS: ModelPersona[] = [
-  {
-    id: 'default',
-    name: 'Default Assistant',
-    description: 'General-purpose AI assistant',
-    systemPrompt: 'You are a helpful, friendly AI assistant. Answer questions thoroughly and accurately.',
-    suitableModels: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192']
-  },
-  {
-    id: 'researcher',
-    name: 'Research Assistant',
-    description: 'Specialized in academic research and information analysis',
-    systemPrompt: 'You are a research assistant specialized in analyzing information and providing well-referenced answers. Prioritize accuracy, depth, and citing reliable sources when possible.',
-    suitableModels: ['llama-3.3-70b-versatile', 'compound-beta', 'deepseek-r1-distill-llama-70b']
-  },
-  {
-    id: 'coder',
-    name: 'Code Assistant',
-    description: 'Specialized in programming and software development',
-    systemPrompt: 'You are a coding assistant specialized in helping with programming tasks. Provide clear, well-documented code examples and explanations. Prioritize correctness, readability, and best practices.',
-    suitableModels: ['compound-beta', 'compound-beta-mini', 'llama-3.3-70b-versatile']
-  },
-  {
-    id: 'analyst',
-    name: 'Data Analyst',
-    description: 'Specialized in data interpretation and visualization',
-    systemPrompt: 'You are a data analysis assistant specialized in interpreting, explaining, and visualizing data. Help users understand patterns, draw insights, and make data-driven decisions.',
-    suitableModels: ['compound-beta', 'llama-3.3-70b-versatile']
-  }
-];
+export interface ModelCapability {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
 
 class ModelManagerService {
-  // Add MODEL_PERSONAS property to fix TypeScript errors
-  MODEL_PERSONAS = MODEL_PERSONAS;
+  private defaultModel = 'llama-3.3-70b-versatile';
   
-  getSystemPrompt(modelId: string, personaId: string = 'default'): string {
-    // Find the requested persona or fall back to default
-    const persona = MODEL_PERSONAS.find(p => p.id === personaId) || MODEL_PERSONAS.find(p => p.id === 'default')!;
+  private modelCapabilities: Record<string, ModelCapability[]> = {
+    'llama3-8b-8192': [{ id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' }],
+    'llama3-70b-8192': [
+      { id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' },
+      { id: 'reasoning', name: 'Reasoning', description: 'Complex reasoning', icon: 'Brain' }
+    ],
+    'llama-3.3-70b-versatile': [
+      { id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' },
+      { id: 'reasoning', name: 'Reasoning', description: 'Complex reasoning', icon: 'Brain' },
+      { id: 'image', name: 'Images', description: 'Image understanding', icon: 'Image' }
+    ],
+    'llama-3.1-8b-instant': [{ id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' }],
+    'gemma2-9b-it': [{ id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' }],
+    'deepseek-r1-distill-llama-70b': [
+      { id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' },
+      { id: 'coding', name: 'Coding', description: 'Code generation', icon: 'Code' }
+    ],
+    'compound-beta': [
+      { id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' },
+      { id: 'search', name: 'Web Search', description: 'Web search', icon: 'Search' },
+      { id: 'code', name: 'Code Execution', description: 'Can execute code', icon: 'Terminal' },
+      { id: 'tool', name: 'Tool Use', description: 'Can use external tools', icon: 'Wrench' }
+    ],
+    'compound-beta-mini': [
+      { id: 'text', name: 'Text', description: 'Text generation', icon: 'MessageSquare' },
+      { id: 'search', name: 'Web Search', description: 'Web search', icon: 'Search' },
+      { id: 'code', name: 'Code Execution', description: 'Can execute code', icon: 'Terminal' }
+    ]
+  };
 
-    // Add model-specific capabilities to the system prompt
-    let systemPrompt = persona.systemPrompt;
-
-    // For agentic models, add specific instructions
-    if (['compound-beta', 'compound-beta-mini'].includes(modelId)) {
-      systemPrompt += '\n\nYou have access to the web search and code execution tools. Use them when necessary to provide the most accurate and up-to-date information.';
+  private personas: Persona[] = [
+    {
+      id: 'default',
+      name: 'Default Assistant',
+      description: 'General-purpose AI assistant',
+      systemPrompt: 'You are a helpful, friendly AI assistant.',
+      suitableModels: ['llama3-8b-8192', 'llama3-70b-8192', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'compound-beta', 'compound-beta-mini']
+    },
+    {
+      id: 'researcher',
+      name: 'Research Assistant',
+      description: 'Specialized in finding and analyzing information',
+      systemPrompt: 'You are a research assistant skilled at finding, analyzing, and synthesizing information.',
+      suitableModels: ['llama3-70b-8192', 'llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini']
+    },
+    {
+      id: 'coder',
+      name: 'Code Assistant',
+      description: 'Specialized in programming and development',
+      systemPrompt: 'You are a coding assistant skilled at writing, explaining, and debugging code.',
+      suitableModels: ['deepseek-r1-distill-llama-70b', 'compound-beta', 'compound-beta-mini']
+    },
+    {
+      id: 'analyst',
+      name: 'Data Analyst',
+      description: 'Specialized in analyzing and visualizing data',
+      systemPrompt: 'You are a data analyst skilled at interpreting, analyzing, and visualizing data.',
+      suitableModels: ['llama3-70b-8192', 'llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini']
     }
+  ];
 
-    // For specialized models, highlight their strengths
-    if (modelId === 'llama-3.3-70b-versatile') {
-      systemPrompt += '\n\nYou have access to an expanded context window and vision capabilities. Use these capabilities to provide comprehensive answers.';
-    }
-
-    // For models with enhanced memory
-    if (['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini', 'gemma2-9b-it'].includes(modelId)) {
-      systemPrompt += '\n\nYou have access to enhanced memory capabilities that allow you to maintain context across long conversations. Previous parts of this conversation may have been summarized to help you maintain context.';
-    }
-
-    // For models with vision capabilities
-    if (['llama-3.3-70b-versatile', 'compound-beta'].includes(modelId)) {
-      systemPrompt += '\n\nYou can analyze and understand images that the user shares with you. When an image is shared, describe what you see and respond appropriately.';
-    }
-
-    return systemPrompt;
+  // Get capabilities for a specific model
+  getCapabilitiesForModel(model: string): ModelCapability[] {
+    return this.modelCapabilities[model] || [];
   }
 
-  getCapabilitiesForModel(modelId: string): ModelCapability[] {
-    return MODEL_CAPABILITIES.filter(capability => capability.isAvailable(modelId));
+  // Get all available personas for a specific model
+  getAvailablePersonasForModel(model: string): Persona[] {
+    return this.personas.filter(persona => persona.suitableModels.includes(model));
   }
 
-  isPersonaSuitableForModel(personaId: string, modelId: string): boolean {
-    const persona = MODEL_PERSONAS.find(p => p.id === personaId);
+  // Check if a persona is suitable for a model
+  isPersonaSuitableForModel(personaId: string, model: string): boolean {
+    const persona = this.personas.find(p => p.id === personaId);
     if (!persona) return false;
-    return persona.suitableModels.includes(modelId);
+    return persona.suitableModels.includes(model);
   }
 
-  getAvailablePersonasForModel(modelId: string): ModelPersona[] {
-    const suitablePersonas = MODEL_PERSONAS.filter(persona => persona.suitableModels.includes(modelId));
-
-    // Always include the default persona if no suitable personas are found
-    if (suitablePersonas.length === 0) {
-      const defaultPersona = MODEL_PERSONAS.find(p => p.id === 'default');
-      if (defaultPersona) {
-        return [defaultPersona];
-      }
-    }
-
-    return suitablePersonas;
+  // Check if model is agentic
+  isAgentic(model: string): boolean {
+    return ['compound-beta', 'compound-beta-mini'].includes(model);
   }
 
-  getModelById(modelId: string) {
-    return getAvailableGroqModels().find(model => model.id === modelId);
+  // Get system prompt for a persona
+  getSystemPrompt(personaId: string): string {
+    const persona = this.personas.find(p => p.id === personaId);
+    return persona?.systemPrompt || this.personas[0].systemPrompt;
+  }
+
+  // Added functions to fix type errors
+  getContextWindowSize(model: string): number {
+    const modelSizes: Record<string, number> = {
+      'llama3-8b-8192': 8192,
+      'llama3-70b-8192': 8192,
+      'llama-3.3-70b-versatile': 8192,
+      'llama-3.1-8b-instant': 4096,
+      'gemma2-9b-it': 8192,
+      'deepseek-r1-distill-llama-70b': 8192,
+      'compound-beta': 16384,
+      'compound-beta-mini': 12288
+    };
+    
+    return modelSizes[model] || 4096;
+  }
+
+  supportsImageInput(model: string): boolean {
+    return ['llama-3.3-70b-versatile', 'compound-beta', 'compound-beta-mini'].includes(model);
+  }
+
+  getAllModels(): string[] {
+    return Object.keys(this.modelCapabilities);
+  }
+
+  getRecommendedModels(): string[] {
+    return ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'compound-beta'];
   }
 }
 
