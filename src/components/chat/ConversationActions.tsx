@@ -36,7 +36,7 @@ const ConversationActions: React.FC<ConversationActionsProps> = ({
         <PopoverContent className="w-72 p-2" align="start" side="top">
           <PersonaSelector
             personas={availablePersonas}
-            activePersonaId={activePersona}
+            activePersona={activePersona}
             onSelectPersona={onPersonaChange}
           />
         </PopoverContent>

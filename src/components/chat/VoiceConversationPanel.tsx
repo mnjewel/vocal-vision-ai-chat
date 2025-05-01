@@ -18,12 +18,10 @@ import { useChat } from '@/hooks/useChat';
 
 interface VoiceConversationPanelProps {
   elevenlabsApiKey?: string;
-  agentId?: string;
 }
 
 const VoiceConversationPanel: React.FC<VoiceConversationPanelProps> = ({
   elevenlabsApiKey = "sk-fd35e9a66288e0ceeca9e348f5506815764ce9c29da1d8b6",
-  agentId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { sendMessage } = useChat();

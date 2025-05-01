@@ -4,13 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Mic, MicOff, Play, Square, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuthContext } from '@/components/AuthProvider';
 
 interface VoiceConversationProps {
   onTranscriptComplete: (transcript: string) => void;
   onAIResponseReceived?: (response: string) => void;
   apiKey?: string;
-  agentId?: string;
 }
 
 const ELEVEN_LABS_API_KEY = "sk-fd35e9a66288e0ceeca9e348f5506815764ce9c29da1d8b6";

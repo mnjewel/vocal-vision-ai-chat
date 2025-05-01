@@ -17,6 +17,7 @@ import ConversationActions from './ConversationActions';
 import ImagePreview from './ImagePreview';
 import ApiKeyInput from './ApiKeyInput';
 import SettingsDialog from '../SettingsDialog';
+import VoiceConversationPanel from './VoiceConversationPanel';
 
 const ChatInterface: React.FC = () => {
   // State from useChat hook
@@ -210,15 +211,19 @@ const ChatInterface: React.FC = () => {
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/30">
         {/* Conversation Action Buttons */}
         <div className="flex gap-2 mb-3 justify-between">
-          <ConversationActions
-            activePersona={activePersona}
-            availablePersonas={getAvailablePersonas()}
-            onPersonaChange={handlePersonaChange}
-            onForkConversation={handleForkConversation}
-            onExportConversation={handleExportConversation}
-            showPersonaSelector={showPersonaSelector}
-            setShowPersonaSelector={setShowPersonaSelector}
-          />
+          <div className="flex items-center space-x-1.5">
+            <ConversationActions
+              activePersona={activePersona}
+              availablePersonas={getAvailablePersonas()}
+              onPersonaChange={handlePersonaChange}
+              onForkConversation={handleForkConversation}
+              onExportConversation={handleExportConversation}
+              showPersonaSelector={showPersonaSelector}
+              setShowPersonaSelector={setShowPersonaSelector}
+            />
+            
+            <VoiceConversationPanel />
+          </div>
 
           <SettingsDialog />
         </div>
