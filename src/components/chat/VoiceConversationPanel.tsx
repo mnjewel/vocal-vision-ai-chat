@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Mic, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Mic, Volume2, VolumeX } from 'lucide-react';
 import VoiceConversation from '../VoiceConversation';
 import { toast } from 'sonner';
 import { useChat } from '@/hooks/useChat';
@@ -102,7 +102,6 @@ const VoiceConversationPanel: React.FC<VoiceConversationPanelProps> = ({
             onTranscriptComplete={handleTranscriptComplete}
             onAIResponseReceived={handleAIResponseReceived}
             apiKey={elevenlabsApiKey}
-            agentId={agentId}
           />
           
           <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">

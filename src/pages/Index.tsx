@@ -49,7 +49,7 @@ const Index = () => {
         <main className="flex-1 pt-16 flex flex-col">
           <div className="flex-1 overflow-hidden">
             {isMobile ? (
-              <MobileFriendlyChatInterface toggleSidebar={toggleSidebar} />
+              <MobileFriendlyChatInterface />
             ) : (
               <EnhancedChatInterface />
             )}

@@ -2,9 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Mic, MicOff, Play, Pause, Stop, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Play, Square, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
 
 interface VoiceConversationProps {
@@ -18,8 +17,7 @@ const ELEVEN_LABS_API_KEY = "sk-fd35e9a66288e0ceeca9e348f5506815764ce9c29da1d8b6
 
 const VoiceConversation: React.FC<VoiceConversationProps> = ({ 
   onTranscriptComplete,
-  onAIResponseReceived,
-  agentId = "default-agent" 
+  onAIResponseReceived
 }) => {
   // State for conversation
   const [isListening, setIsListening] = useState(false);
@@ -28,9 +26,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [lastResponseText, setLastResponseText] = useState('');
 
   // Refs
@@ -39,8 +35,6 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
-  const { user } = useAuthContext();
   
   // Setup audio context and analyser for visualizing audio levels
   useEffect(() => {
@@ -291,11 +285,10 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       
       const audioBlob = await response.blob();
       const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
       
       if (audioRef.current) {
         audioRef.current.src = url;
-        audioRef.current.volume = volume;
+        audioRef.current.volume = 1.0;
         audioRef.current.play();
       }
     } catch (error) {
@@ -365,7 +358,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
           >
             {isConnected ? (
               <>
-                <Stop className="h-3.5 w-3.5" />
+                <Square className="h-3.5 w-3.5" />
                 <span>End Conversation</span>
               </>
             ) : (
