@@ -6,7 +6,13 @@ describe('MessageInput', () => {
   test('renders correctly', () => {
     render(<MessageInput 
       onSendMessage={() => Promise.resolve()} 
-      onFileSelected={() => {}} 
+      onFileSelected={() => {}}
+      uploadedImage={null}
+      isTyping={false}
+      isSubmitting={false}
+      streamingResponse={false}
+      activeAPITab="groq"
+      showAPIKeyInput={false}
     />);
     const inputElement = screen.getByPlaceholderText('Send a message...');
     expect(inputElement).toBeInTheDocument();

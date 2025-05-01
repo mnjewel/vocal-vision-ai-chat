@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -16,7 +17,7 @@ import ModelCapabilitiesBanner from './ModelCapabilitiesBanner';
 import ConversationActions from './ConversationActions';
 import SettingsDialog from '../SettingsDialog';
 
-const MobileFriendlyChatInterface: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
+const MobileFriendlyChatInterface: React.FC<{ toggleSidebar: () => void }> = () => {
   // State from useChat hook
   const {
     messages,
@@ -52,11 +53,6 @@ const MobileFriendlyChatInterface: React.FC<{ toggleSidebar: () => void }> = ({ 
   // Get available personas for the current model
   const getAvailablePersonas = () => {
     return ModelManager.getAvailablePersonasForModel(selectedModel);
-  };
-
-  // Get active capabilities for the current model
-  const getActiveCapabilities = () => {
-    return ModelManager.getCapabilitiesForModel(selectedModel);
   };
 
   // Check selected model type

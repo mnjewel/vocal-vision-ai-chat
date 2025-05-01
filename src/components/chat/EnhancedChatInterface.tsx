@@ -17,8 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent } from '@/components/ui/popover';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { hasGroqKey } from '@/integrations/groq/client';
@@ -93,11 +93,11 @@ const EnhancedChatInterface: React.FC = () => {
   // Fix the handleForkConversation function to return string | null
   const handleForkConversation = async (): Promise<string | null> => {
     try {
-      await forkConversation();
+      const newSessionId = await forkConversation();
       toast({
         description: "Conversation forked successfully",
       });
-      return currentSessionId; // Return the current session ID as fallback
+      return newSessionId || currentSessionId; // Return the new or current session ID
     } catch (error) {
       console.error("Error forking conversation:", error);
       return null;
@@ -180,7 +180,7 @@ const EnhancedChatInterface: React.FC = () => {
     setActivePersona(personaId);
     setShowPersonaSelector(false);
 
-    const persona = getAvailablePersonas().find(p => p.id === personaId);
+    const persona = ModelManager.getAvailablePersonasForModel(selectedModel).find(p => p.id === personaId);
     if (persona) {
       toast({
         description: `Switched to ${persona.name} persona`,
@@ -199,7 +199,8 @@ const EnhancedChatInterface: React.FC = () => {
   };
 
   // Get available personas for the current model
-  const getAvailablePersonasForModel = () => {
+  // This function is used in the render, so we keep it
+  const getAvailablePersonas = () => {
     return ModelManager.getAvailablePersonasForModel(selectedModel);
   };
 
@@ -328,7 +329,7 @@ const EnhancedChatInterface: React.FC = () => {
             <p className="text-xs text-muted-foreground">Choose how the assistant behaves</p>
           </div>
           <div className="py-2 max-h-60 overflow-y-auto">
-            {ModelManager.getAvailablePersonasForModel(selectedModel).map(persona => (
+            {getAvailablePersonas().map(persona => (
               <button
                 key={persona.id}
                 className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${

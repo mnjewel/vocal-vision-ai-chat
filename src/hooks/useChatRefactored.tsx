@@ -1,10 +1,10 @@
+
 import { useRef, useEffect } from 'react';
 import { MemoryManager } from '@/services/MemoryManager';
 import useMessages from './useMessages';
 import useSessions from './useSessions';
 import usePersona from './usePersona';
 import useModelCapabilities from './useModelCapabilities';
-import { Message } from '@/types/chat';
 
 export const useChat = () => {
   // Create a ref to store the MemoryManager instance
@@ -70,7 +70,6 @@ export const useChat = () => {
     deleteMessage,
     updatePendingMessage,
     loadSessionMessages,
-    setMessages
   } = useMessages({
     memoryManager: memoryManagerRef.current,
     currentSessionId,
