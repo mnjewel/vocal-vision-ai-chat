@@ -193,17 +193,14 @@ const EnhancedChatInterface: React.FC = () => {
     exportConversation();
   };
 
-  // Handle jump to message
-  const handleJumpToMessage = (messageId: string) => {
-    const messageElement = document.getElementById(`message-${messageId}`);
-    if (messageElement) {
-      messageElement.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   // Get current persona
   const getCurrentPersona = () => {
     return ModelManager.getAvailablePersonasForModel(selectedModel).find(p => p.id === activePersona) || ModelManager.getAvailablePersonasForModel(selectedModel)[0];
+  };
+
+  // Get available personas for the current model
+  const getAvailablePersonasForModel = () => {
+    return ModelManager.getAvailablePersonasForModel(selectedModel);
   };
 
   return (

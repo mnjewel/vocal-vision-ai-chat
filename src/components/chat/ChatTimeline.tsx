@@ -1,19 +1,26 @@
+
 import React, { useState } from 'react';
 import { 
-  Calendar, 
   Clock, 
   Search, 
   GitBranch, 
-  History,
-  ChevronDown,
-  ChevronRight,
   MessageSquare,
+  ChevronDown,
+  ChevronUp,
   Calendar as CalendarIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message } from '@/types/chat';
 import { format } from 'date-fns';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface ChatTimelineProps {
   messages: Message[];
@@ -321,12 +328,4 @@ export default ChatTimeline;
 
 function formatDateKey(date: Date): string {
   return format(date, 'yyyy-MM-dd');
-}
-
-function formatDateDisplay(date: string): string {
-  return format(new Date(date), 'MMMM d, yyyy');
-}
-
-function formatTimeDisplay(date: Date): string {
-  return format(date, 'h:mm a');
 }
