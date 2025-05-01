@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { hasGroqKey, removeGroqKey } from '@/integrations/groq/client';
+import { hasGroqKey } from '@/integrations/groq/client';
 import { useAuthContext } from '@/components/AuthProvider';
 import { useSettingsStore } from '@/stores/settingsStore';
 import useChat from '@/hooks/useChat';
@@ -22,9 +23,7 @@ const ChatInterfaceRefactored: React.FC = () => {
   const {
     messages,
     isTyping,
-    pendingMessage,
     sendMessage,
-    updatePendingMessage,
     deleteMessage,
     activePersona,
     setActivePersona,
@@ -44,7 +43,7 @@ const ChatInterfaceRefactored: React.FC = () => {
   const { user } = useAuthContext();
   
   // Get settings from store
-  const { showAgentTools, defaultModel } = useSettingsStore();
+  const { defaultModel } = useSettingsStore();
   const [selectedModel, setSelectedModel] = useState<string>(defaultModel);
 
   // Check if model is agentic
@@ -87,9 +86,7 @@ const ChatInterfaceRefactored: React.FC = () => {
       const availablePersonas = ModelManager.getAvailablePersonasForModel(model);
       if (availablePersonas.length > 0) {
         setActivePersona(availablePersonas[0].id);
-        toast({
-          description: `Switched to ${availablePersonas[0].name} persona to match selected model capabilities`,
-        });
+        toast.info(`Switched to ${availablePersonas[0].name} persona to match selected model capabilities`);
       }
     }
   };
@@ -143,22 +140,13 @@ const ChatInterfaceRefactored: React.FC = () => {
     
     const persona = getAvailablePersonas().find(p => p.id === personaId);
     if (persona) {
-      toast({
-        description: `Switched to ${persona.name} persona`,
-      });
+      toast.info(`Switched to ${persona.name} persona`);
     }
   };
 
   // Handle API key saved
   const handleKeySaved = () => {
     setShowAPIKeyInput(false);
-  };
-
-  // Handle API key reset
-  const handleResetGroqKey = () => {
-    removeGroqKey();
-    setActiveAPITab('groq');
-    setShowAPIKeyInput(true);
   };
 
   // Handle fork conversation

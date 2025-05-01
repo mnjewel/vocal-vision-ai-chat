@@ -24,10 +24,17 @@ export interface ChatSession {
   updatedAt: Date;
 }
 
-export interface ModelPersona {
+export interface Persona {
   id: string;
   name: string;
   description: string;
   systemPrompt: string;
   suitableModels: string[];
+}
+
+export interface ModelCapability {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
 }

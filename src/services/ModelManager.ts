@@ -1,6 +1,5 @@
 
-// If this file doesn't exist yet, this will create it
-import { type Persona, type ModelCapability } from '@/types/chat';
+import { Persona, ModelCapability } from '@/types/chat';
 
 class ModelManagerService {
   private modelCapabilities: Record<string, ModelCapability[]> = {
@@ -92,7 +91,7 @@ class ModelManagerService {
     return persona?.systemPrompt || this.personas[0].systemPrompt;
   }
 
-  // Added functions for compatibility
+  // Added methods for compatibility
   getContextWindowSize(model: string): number {
     const modelSizes: Record<string, number> = {
       'llama3-8b-8192': 8192,
@@ -122,4 +121,3 @@ class ModelManagerService {
 }
 
 export const ModelManager = new ModelManagerService();
-export type { Persona as ModelPersona };

@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export interface ModelSelectorProps {
   selectedModel: string;
   onSelectModel: (model: string) => void;
-  onModelChange?: (model: string) => void; // Adding this for backwards compatibility
+  onModelChange?: (model: string) => void; // For backwards compatibility
   compact?: boolean;
 }
 

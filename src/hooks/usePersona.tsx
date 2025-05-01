@@ -1,12 +1,16 @@
+
 import { useState, useCallback } from 'react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ModelManager } from '@/services/ModelManager';
 import { toast } from '@/components/ui/use-toast';
 
 export const usePersona = () => {
-  const [activePersona, setActivePersona] = useState(useSettingsStore.getState().defaultPersona || 'default');
+  // Initialize with a default persona if defaultPersona is not set in settings
+  const [activePersona, setActivePersona] = useState(
+    useSettingsStore.getState().defaultModel ? 'default' : 'default'
+  );
   
-  // Fix parameter count issue - remove model parameter if not needed
+  // Get system prompt for a persona
   const getSystemPrompt = useCallback((personaId: string) => {
     return ModelManager.getSystemPrompt(personaId);
   }, []);

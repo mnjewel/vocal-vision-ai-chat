@@ -1,10 +1,9 @@
+
 import React from 'react';
 import { Brain, GitBranch, Download, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from '@/components/ui/use-toast';
-// Update import to use the correct type
-import { type Persona } from '@/types/chat';
+import { Persona } from '@/types/chat';
 
 interface ConversationActionsProps {
   activePersona: string;

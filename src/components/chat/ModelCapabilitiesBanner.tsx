@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { X, Search, Code, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-// Update import to use the correct type
-import { type Persona } from '@/types/chat';
+import { Persona } from '@/types/chat';
 
 interface ModelCapabilitiesBannerProps {
   isAgentic: boolean;
@@ -11,15 +11,12 @@ interface ModelCapabilitiesBannerProps {
   onClearPersona: () => void;
 }
 
-const ModelCapabilitiesBanner: React.FC<ModelCapabilitiesBannerProps> = ({
+const ModelCapabilitiesBanner: React.FC<ModelCapabilitiesBannerProps> = ({ 
   isAgentic,
   hasApiKey,
-  currentPersona,
   onClearPersona
 }) => {
-  if (!isAgentic || !hasApiKey) {
-    return null;
-  }
+  if (!isAgentic || !hasApiKey) return null;
 
   return (
     <div className="mx-4 mt-2 p-4 neural-glass rounded-lg border border-amber-200/50 dark:border-amber-700/30 shadow-neural">
