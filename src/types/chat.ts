@@ -19,7 +19,7 @@ export interface Message {
 export interface ChatSession {
   id: string;
   title: string;
-  messages: Message[];
+  messages?: Message[]; // Make this optional to match the Session type
   createdAt: Date;
   updatedAt: Date;
 }
