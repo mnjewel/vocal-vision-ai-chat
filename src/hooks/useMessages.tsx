@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -162,6 +163,16 @@ export const useMessages = ({
           role: m.role,
           content: m.content
         }));
+
+        // Check if the last message in the API payload is a user message
+        // This is critical to fix the "last message role must be 'user'" error
+        if (apiMessages.length > 0 && apiMessages[apiMessages.length - 1].role !== 'user') {
+          console.warn('Last message is not from user, adding user message to context');
+          apiMessages.push({
+            role: 'user',
+            content: content
+          });
+        }
 
         // Create pending AI message for streaming
         const assistantMessageId = generateId();

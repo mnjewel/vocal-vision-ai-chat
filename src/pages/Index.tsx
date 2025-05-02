@@ -7,6 +7,10 @@ import MobileFriendlyChatInterface from '@/components/chat/MobileFriendlyChatInt
 import useChat from '@/hooks/useChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
