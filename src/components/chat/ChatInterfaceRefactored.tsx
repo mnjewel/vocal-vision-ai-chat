@@ -46,6 +46,11 @@ const ChatInterfaceRefactored: React.FC = () => {
   const { defaultModel } = useSettingsStore();
   const [selectedModel, setSelectedModel] = useState<string>(defaultModel);
 
+  // Check if API key is available
+  useEffect(() => {
+    setShowAPIKeyInput(!hasGroqKey());
+  }, []);
+
   // Check if model is agentic
   const isAgentic = (model: string): boolean => {
     return ['compound-beta', 'compound-beta-mini'].includes(model);
@@ -106,8 +111,9 @@ const ChatInterfaceRefactored: React.FC = () => {
     
     const isGroqModel = groqModels.includes(selectedModel);
     
-    if ((isGroqModel && !hasGroqKey())) {
+    if (isGroqModel && !hasGroqKey()) {
       setShowAPIKeyInput(true);
+      toast.error('Please enter your Groq API key to continue');
       return;
     }
     
@@ -117,7 +123,7 @@ const ChatInterfaceRefactored: React.FC = () => {
       setUploadedImage(null);
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please check your API key and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -131,6 +137,7 @@ const ChatInterfaceRefactored: React.FC = () => {
   // Handle delete message
   const handleDeleteMessage = (id: string) => {
     deleteMessage(id);
+    toast.success('Message deleted');
   };
 
   // Handle persona change
@@ -147,27 +154,40 @@ const ChatInterfaceRefactored: React.FC = () => {
   // Handle API key saved
   const handleKeySaved = () => {
     setShowAPIKeyInput(false);
+    toast.success('API key saved successfully');
   };
 
   // Handle fork conversation
   const handleForkConversation = async () => {
     await forkConversation();
+    toast.success('Conversation forked successfully');
   };
 
   // Handle export conversation
   const handleExportConversation = () => {
     exportConversation();
+    toast.success('Conversation exported successfully');
   };
 
   // Get current persona
   const getCurrentPersona = () => {
-    return getAvailablePersonas().find(p => p.id === activePersona) || getAvailablePersonas()[0];
+    const availablePersonas = getAvailablePersonas();
+    if (!availablePersonas || availablePersonas.length === 0) {
+      return {
+        id: 'default',
+        name: 'Default Assistant',
+        description: 'General-purpose AI assistant',
+        systemPrompt: 'You are a helpful, friendly AI assistant.',
+        suitableModels: []
+      };
+    }
+    return availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
   };
 
   return (
     <div className="flex flex-col h-full">
       {/* API Key Input */}
-      {(!user || showAPIKeyInput) && (
+      {showAPIKeyInput && (
         <ApiKeyInput onKeySaved={handleKeySaved} />
       )}
       

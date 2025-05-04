@@ -1,15 +1,26 @@
 
 import OpenAI from 'openai';
+import { getGroqConfig } from './client';
 
-const groq = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
-});
+const getGroqClient = () => {
+  try {
+    const { apiKey } = getGroqConfig();
+    
+    return new OpenAI({
+      apiKey,
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+  } catch (error) {
+    console.error('Failed to initialize Groq client:', error);
+    throw new Error('Groq API key not configured. Please add your API key in settings.');
+  }
+};
 
 export const createGroqChatCompletion = async (
   request: any
 ) => {
   try {
+    const groq = getGroqClient();
     const response = await groq.chat.completions.create(request);
     const content = response.choices[0]?.message?.content;
 
