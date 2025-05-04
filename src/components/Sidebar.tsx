@@ -10,11 +10,12 @@ import {
   Video,
   Settings,
   Search,
-  PlusCircle
+  PlusCircle,
+  Trash2
 } from 'lucide-react';
 import { useAuthContext } from './AuthProvider';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ interface SidebarProps {
   currentSessionId: string | null;
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
+  onDeleteSession?: (sessionId: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -33,15 +35,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   currentSessionId,
   onSessionSelect,
   onNewSession,
+  onDeleteSession
 }) => {
   const { user, signOut } = useAuthContext();
   const navigate = useNavigate();
 
   const handleFeatureClick = (feature: string) => {
-    toast({
-      title: `${feature} Feature`,
-      description: `The ${feature.toLowerCase()} feature is coming soon!`,
-    });
+    toast.info(`${feature} feature is coming soon!`);
   };
 
   const handleSignOut = async () => {
@@ -53,16 +53,24 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  // Filter out empty chat sessions for display
-  const nonEmptySessions = sessions.filter(session => 
-    session.title !== 'New Conversation' || session.id === currentSessionId
-  );
+  // Filter out empty chat sessions and limit to 10 most recent for display
+  const validSessions = sessions
+    .filter(session => 
+      session.title && session.title !== 'New Conversation' || session.id === currentSessionId
+    )
+    .sort((a, b) => {
+      // Sort by last updated timestamp (most recent first)
+      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 10); // Limit to 10 most recent conversations
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 w-[280px] bg-background/95 backdrop-blur-md border-r border-border/50 transition-transform transform z-20
+      className={`fixed inset-y-0 left-0 w-[280px] bg-background border-r border-border/50 transition-transform transform z-20
                  ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                 lg:translate-x-0 lg:relative`}
+                 lg:translate-x-0 lg:relative shadow-sm`}
     >
       <div className="h-full flex flex-col">
         <div className="h-14 md:h-16 px-4 flex items-center justify-between border-b border-border/50">
@@ -136,22 +144,36 @@ const Sidebar: React.FC<SidebarProps> = ({
         <Separator className="my-2 bg-border/50" />
 
         <div className="flex-grow overflow-hidden">
-          <h2 className="mb-2 px-4 text-xs font-medium text-muted-foreground">
-            History
+          <h2 className="flex items-center justify-between mb-2 px-4 text-xs font-medium text-muted-foreground">
+            <span>Recent Conversations</span>
+            {validSessions.length > 0 && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted">{validSessions.length}</span>
+            )}
           </h2>
           <ScrollArea className="h-[calc(100%-2rem)] px-3">
-            {nonEmptySessions.length > 0 ? (
+            {validSessions.length > 0 ? (
               <div className="space-y-1">
-                {nonEmptySessions.map((session) => (
-                  <Button
-                    key={session.id}
-                    variant={currentSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start h-9 text-sm truncate"
-                    onClick={() => onSessionSelect(session.id)}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">{session.title}</span>
-                  </Button>
+                {validSessions.map((session) => (
+                  <div key={session.id} className="flex items-center group">
+                    <Button
+                      variant={currentSessionId === session.id ? "secondary" : "ghost"}
+                      className="w-full justify-start h-9 text-sm truncate rounded-r-none"
+                      onClick={() => onSessionSelect(session.id)}
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{session.title || "New Conversation"}</span>
+                    </Button>
+                    {onDeleteSession && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-2 rounded-l-none opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => onDeleteSession(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (

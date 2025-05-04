@@ -1,64 +1,58 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Message } from '@/types/chat';
-import ChatMessage from '@/components/chat/ChatMessage';
+import ChatMessage from '../chat/ChatMessage';
 
 interface MessageListProps {
   messages: Message[];
-  isTyping: boolean;
-  onDeleteMessage: (id: string) => void;
-  onSendMessage?: (message: string) => void;
+  isTyping?: boolean;
+  onReaction?: (messageId: string, reaction: string, active: boolean) => void;
+  onFollowUpClick?: (suggestion: string) => void;
+  onDeleteMessage?: (id: string) => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
-  isTyping, 
-  onDeleteMessage,
-  onSendMessage 
+  isTyping = false,
+  onReaction,
+  onFollowUpClick,
+  onDeleteMessage
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom on new messages or when typing
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
 
-  const handleReaction = (messageId: string, reaction: string, active: boolean) => {
-    console.log(`Message ${messageId} received ${reaction} reaction (${active ? 'added' : 'removed'})`);
-    // In a production app, you would save this to the database
-  };
-
-  const handleFollowUpClick = (suggestion: string) => {
-    if (onSendMessage) {
-      onSendMessage(suggestion);
-    }
-  };
-
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-6 neural-messages-container">
-      {messages.map((message) => (
-        <ChatMessage 
-          key={message.id} 
-          message={message} 
-          onReaction={handleReaction}
-          onFollowUpClick={onSendMessage ? handleFollowUpClick : undefined}
-          onDelete={onDeleteMessage}
-        />
-      ))}
-      
-      {isTyping && (
-        <div className="message-assistant shadow-sm">
-          <div className="flex space-x-2">
-            <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce"></div>
-            <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+    <div className="flex-1 overflow-y-auto p-4 neural-messages-container">
+      <div className="space-y-4 max-w-4xl mx-auto">
+        {messages.map((message) => (
+          <ChatMessage
+            key={message.id}
+            message={message}
+            onReaction={onReaction}
+            onFollowUpClick={onFollowUpClick}
+            onDelete={onDeleteMessage}
+          />
+        ))}
+        
+        {isTyping && (
+          <div className="message-assistant max-w-[85%] mr-auto">
+            <div className="flex space-x-2 items-center">
+              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse-gentle"></div>
+              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse-gentle delay-150"></div>
+              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse-gentle delay-300"></div>
+              <span className="sr-only">AI is typing...</span>
+            </div>
           </div>
-        </div>
-      )}
-      
-      <div ref={messagesEndRef} />
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 };

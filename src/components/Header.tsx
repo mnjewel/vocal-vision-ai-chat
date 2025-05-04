@@ -17,7 +17,12 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle sidebar</span>
           </Button>
-          <div className="font-semibold text-lg neural-gradient-text">W3J Assistant</div>
+          <div className="flex items-center gap-2">
+            <div className="bg-neural-gradient-purple p-1.5 rounded-md hidden sm:flex">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a8 8 0 0 0-8 8v12l6.5-6.5H12a8 8 0 0 0 0-16z"></path></svg>
+            </div>
+            <div className="font-semibold text-lg neural-gradient-text">W3J Assistant</div>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <PWAInstallPrompt />

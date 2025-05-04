@@ -1,16 +1,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Share2, Users } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import PersonaSelector from './PersonaSelector';
+import { 
+  User, 
+  GitFork, 
+  Download, 
+  ChevronDown,
+  Trash2,
+} from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Persona } from '@/types/chat';
 
 interface ConversationActionsProps {
   activePersona: string;
-  availablePersonas: any[];
+  availablePersonas: Persona[];
   onPersonaChange: (personaId: string) => void;
-  onForkConversation: () => Promise<void>;
+  onForkConversation: () => void;
   onExportConversation: () => void;
+  onClearConversation?: () => void;
   showPersonaSelector: boolean;
   setShowPersonaSelector: (show: boolean) => void;
 }
@@ -21,47 +33,77 @@ const ConversationActions: React.FC<ConversationActionsProps> = ({
   onPersonaChange,
   onForkConversation,
   onExportConversation,
+  onClearConversation,
   showPersonaSelector,
   setShowPersonaSelector,
 }) => {
-  return (
-    <div className="flex items-center space-x-1.5">
-      <Popover open={showPersonaSelector} onOpenChange={setShowPersonaSelector}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Users className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Persona</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 p-2" align="start" side="top">
-          <PersonaSelector
-            personas={availablePersonas}
-            activePersona={activePersona}
-            onSelectPersona={onPersonaChange}
-          />
-        </PopoverContent>
-      </Popover>
+  const currentPersona = availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
+  return (
+    <>
+      {/* Persona Selector */}
+      <DropdownMenu open={showPersonaSelector} onOpenChange={setShowPersonaSelector}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="h-8 gap-1 bg-background">
+            <User className="h-3.5 w-3.5" />
+            <span className="truncate max-w-[100px] hidden sm:inline-block">
+              {currentPersona?.name || "Default"}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        
+        <DropdownMenuContent align="start" className="w-56">
+          {availablePersonas.map((persona) => (
+            <DropdownMenuItem
+              key={persona.id}
+              className={`flex flex-col items-start space-y-1 ${persona.id === activePersona ? 'bg-accent text-accent-foreground' : ''}`}
+              onClick={() => onPersonaChange(persona.id)}
+            >
+              <div className="font-medium">{persona.name}</div>
+              <div className="text-xs text-muted-foreground line-clamp-1">
+                {persona.description}
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Fork Button */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="h-8 w-8" 
+        title="Fork conversation"
         onClick={onForkConversation}
       >
-        <Share2 className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Fork</span>
+        <GitFork className="h-3.5 w-3.5" />
       </Button>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
+      {/* Export Button */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="h-8 w-8" 
+        title="Export conversation"
         onClick={onExportConversation}
       >
-        <Copy className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Export</span>
+        <Download className="h-3.5 w-3.5" />
       </Button>
-    </div>
+
+      {/* Clear Button */}
+      {onClearConversation && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 w-8" 
+          title="Clear conversation"
+          onClick={onClearConversation}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </>
   );
 };
 

@@ -19,7 +19,7 @@ import ApiKeyInput from './ApiKeyInput';
 import SettingsDialog from '../SettingsDialog';
 import VoiceConversationPanel from './VoiceConversationPanel';
 
-const ChatInterface: React.FC = () => {
+const EnhancedChatInterface: React.FC = () => {
   // State from useChat hook
   const {
     messages,
@@ -31,6 +31,7 @@ const ChatInterface: React.FC = () => {
     forkConversation,
     exportConversation,
     streamingResponse,
+    clearConversation,
   } = useChat();
 
   // Local state
@@ -39,6 +40,7 @@ const ChatInterface: React.FC = () => {
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPersonaSelector, setShowPersonaSelector] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState<string>('');
 
   // Get user from auth context
   const { user } = useAuthContext();
@@ -154,11 +156,24 @@ const ChatInterface: React.FC = () => {
   // Handle fork conversation
   const handleForkConversation = async () => {
     await forkConversation();
+    toast.success('Conversation forked');
   };
 
   // Handle export conversation
   const handleExportConversation = () => {
     exportConversation();
+    toast.success('Conversation exported');
+  };
+
+  // Handle clear conversation
+  const handleClearConversation = () => {
+    clearConversation();
+    toast.success('Conversation cleared');
+  };
+
+  // Handle voice transcript ready
+  const handleTranscriptReady = (text: string) => {
+    setInputValue(text);
   };
 
   // Get current persona
@@ -218,11 +233,12 @@ const ChatInterface: React.FC = () => {
               onPersonaChange={handlePersonaChange}
               onForkConversation={handleForkConversation}
               onExportConversation={handleExportConversation}
+              onClearConversation={handleClearConversation}
               showPersonaSelector={showPersonaSelector}
               setShowPersonaSelector={setShowPersonaSelector}
             />
             
-            <VoiceConversationPanel />
+            <VoiceConversationPanel onTranscriptReady={handleTranscriptReady} />
           </div>
 
           <SettingsDialog />
@@ -250,10 +266,12 @@ const ChatInterface: React.FC = () => {
           streamingResponse={streamingResponse}
           activeAPITab={activeAPITab}
           showAPIKeyInput={showAPIKeyInput}
+          value={inputValue}
+          onChange={setInputValue}
         />
       </div>
     </div>
   );
 };
 
-export default ChatInterface;
+export default EnhancedChatInterface;

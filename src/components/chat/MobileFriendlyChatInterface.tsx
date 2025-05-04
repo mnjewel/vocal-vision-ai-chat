@@ -16,6 +16,7 @@ import { hasGroqKey } from '@/integrations/groq/client';
 import ModelCapabilitiesBanner from './ModelCapabilitiesBanner';
 import ConversationActions from './ConversationActions';
 import SettingsDialog from '../SettingsDialog';
+import VoiceConversationPanel from './VoiceConversationPanel';
 
 const MobileFriendlyChatInterface: React.FC = () => {
   // State from useChat hook
@@ -29,6 +30,7 @@ const MobileFriendlyChatInterface: React.FC = () => {
     forkConversation,
     exportConversation,
     streamingResponse,
+    clearConversation,
   } = useChat();
 
   // Local state
@@ -37,6 +39,7 @@ const MobileFriendlyChatInterface: React.FC = () => {
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPersonaSelector, setShowPersonaSelector] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState<string>('');
 
   // Get user from auth context
   const { user } = useAuthContext();
@@ -125,6 +128,7 @@ const MobileFriendlyChatInterface: React.FC = () => {
   // Handle delete message
   const handleDeleteMessage = (id: string) => {
     deleteMessage(id);
+    toast.success('Message deleted');
   };
 
   // Handle persona change
@@ -146,16 +150,36 @@ const MobileFriendlyChatInterface: React.FC = () => {
   // Handle fork conversation
   const handleForkConversation = async () => {
     await forkConversation();
+    toast.success('Conversation forked');
   };
 
   // Handle export conversation
   const handleExportConversation = () => {
     exportConversation();
+    toast.success('Conversation exported');
+  };
+
+  // Handle voice transcript ready
+  const handleTranscriptReady = (text: string) => {
+    setInputValue(text);
   };
 
   // Get current persona
   const getCurrentPersona = () => {
-    return getAvailablePersonas().find(p => p.id === activePersona) || getAvailablePersonas()[0];
+    const availablePersonas = getAvailablePersonas();
+    
+    // Safety check to ensure we have personas
+    if (!availablePersonas || availablePersonas.length === 0) {
+      return {
+        id: 'default',
+        name: 'Default Assistant',
+        description: 'General-purpose AI assistant',
+        systemPrompt: 'You are a helpful, friendly AI assistant.',
+        suitableModels: []
+      };
+    }
+    
+    return availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
   };
 
   return (
@@ -189,15 +213,20 @@ const MobileFriendlyChatInterface: React.FC = () => {
       <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/30">
         {/* Conversation Action Buttons */}
         <div className="flex gap-2 mb-3 justify-between">
-          <ConversationActions
-            activePersona={activePersona}
-            availablePersonas={getAvailablePersonas()}
-            onPersonaChange={handlePersonaChange}
-            onForkConversation={handleForkConversation}
-            onExportConversation={handleExportConversation}
-            showPersonaSelector={showPersonaSelector}
-            setShowPersonaSelector={setShowPersonaSelector}
-          />
+          <div className="flex items-center space-x-1.5">
+            <ConversationActions
+              activePersona={activePersona}
+              availablePersonas={getAvailablePersonas()}
+              onPersonaChange={handlePersonaChange}
+              onForkConversation={handleForkConversation}
+              onExportConversation={handleExportConversation}
+              onClearConversation={clearConversation}
+              showPersonaSelector={showPersonaSelector}
+              setShowPersonaSelector={setShowPersonaSelector}
+            />
+            
+            <VoiceConversationPanel onTranscriptReady={handleTranscriptReady} />
+          </div>
 
           <SettingsDialog />
         </div>
@@ -223,6 +252,8 @@ const MobileFriendlyChatInterface: React.FC = () => {
           streamingResponse={streamingResponse}
           activeAPITab={activeAPITab}
           showAPIKeyInput={showAPIKeyInput}
+          value={inputValue}
+          onChange={setInputValue}
         />
       </div>
     </div>
