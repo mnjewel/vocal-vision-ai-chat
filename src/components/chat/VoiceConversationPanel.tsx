@@ -6,14 +6,13 @@ import useSpeechRecognition from '@/hooks/useSpeechRecognition';
 
 const VoiceConversationPanel: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const { startListening, stopListening, transcript, resetTranscript } = useSpeechRecognition();
+  const { startListening, stopListening } = useSpeechRecognition();
 
   const handleToggleRecording = () => {
     if (isRecording) {
       stopListening();
       setIsRecording(false);
     } else {
-      resetTranscript();
       startListening();
       setIsRecording(true);
     }

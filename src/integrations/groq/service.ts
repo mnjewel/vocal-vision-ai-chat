@@ -1,4 +1,4 @@
-import { ChatCompletionCreateParams } from 'openai/resources/chat';
+
 import OpenAI from 'openai';
 
 const groq = new OpenAI({
@@ -6,20 +6,8 @@ const groq = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
-const params: ChatCompletionCreateParams = {
-  model: 'llama2-70b-4096',
-  messages: [{ role: 'user', content: 'Say this is a test' }],
-  temperature: 0.7,
-  max_tokens: 1024,
-  top_p: 1,
-  frequency_penalty: 0,
-  presence_penalty: 0,
-  stream: false,
-  n: 1,
-};
-
 export const createGroqChatCompletion = async (
-  request: ChatCompletionCreateParams
+  request: any
 ) => {
   try {
     const response = await groq.chat.completions.create(request);
@@ -46,7 +34,7 @@ interface FunctionCall {
   arguments: string;
 }
 
-export const handleFunctionCall = async (call: FunctionCall, context: any) => {
+export const handleFunctionCall = async (call: FunctionCall) => {
   try {
     if (!call || !call.name) {
       console.warn('Invalid function call:', call);

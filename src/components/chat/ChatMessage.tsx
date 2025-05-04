@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message } from '@/types/chat';
 import MessageReactions from './MessageReactions';
@@ -22,7 +23,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isUserMessage = role === 'user';
   const isAssistantMessage = role === 'assistant';
-  const isSystemMessage = role === 'system';
 
   const timeAgo = timestamp ? formatDistanceToNow(new Date(timestamp), { addSuffix: true }) : null;
 
@@ -49,16 +49,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
       {/* Reactions - only for assistant messages */}
       {isAssistantMessage && onReaction && (
-        <MessageReactions messageId={id} onReaction={onReaction} />
+        <MessageReactions 
+          messageId={id} 
+          onReactionToggle={onReaction} 
+        />
       )}
 
       {/* Follow-up Suggestions - only for assistant messages */}
       {isAssistantMessage && onFollowUpClick && (
-        <FollowUpSuggestions suggestions={[
-          "Tell me more.",
-          "Explain it simply.",
-          "Give me code example."
-        ]} onFollowUpClick={onFollowUpClick} />
+        <FollowUpSuggestions 
+          suggestions={[
+            "Tell me more.",
+            "Explain it simply.",
+            "Give me code example."
+          ]} 
+          onSuggestionClick={onFollowUpClick} 
+        />
       )}
 
       {/* Delete Button - only for user messages and if onDelete is provided */}
