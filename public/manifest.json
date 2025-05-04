@@ -11,19 +11,82 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#8B5CF6",
   "background_color": "#FFFFFF",
   "orientation": "portrait-primary",
-  "description": "Premium AI chatbot powered by Groq",
-  "screenshots": []
+  "description": "Premium Groq-powered AI chatbot with voice capabilities",
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot2.png",
+      "type": "image/png",
+      "sizes": "750x1334",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "short_name": "New",
+      "description": "Start a new chat session",
+      "url": "/?new=1",
+      "icons": [{ "src": "shortcut-chat.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Voice Chat",
+      "short_name": "Voice",
+      "description": "Start a voice conversation",
+      "url": "/?voice=1",
+      "icons": [{ "src": "shortcut-voice.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["productivity", "utilities", "artificial intelligence"],
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/plain": [".txt"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/?share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*", "text/plain"]
+        }
+      ]
+    }
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
 }
