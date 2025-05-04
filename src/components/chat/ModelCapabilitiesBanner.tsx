@@ -1,50 +1,52 @@
 
 import React from 'react';
-import { X, Search, Code, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Persona } from '@/types/chat';
+import { X } from 'lucide-react';
 
 interface ModelCapabilitiesBannerProps {
   isAgentic: boolean;
   hasApiKey: boolean;
-  currentPersona: Persona;
+  currentPersona: {
+    id: string;
+    name: string;
+    description: string;
+  };
   onClearPersona: () => void;
 }
 
-const ModelCapabilitiesBanner: React.FC<ModelCapabilitiesBannerProps> = ({ 
+const ModelCapabilitiesBanner: React.FC<ModelCapabilitiesBannerProps> = ({
   isAgentic,
   hasApiKey,
-  onClearPersona
+  currentPersona,
+  onClearPersona,
 }) => {
   if (!isAgentic || !hasApiKey) return null;
 
   return (
-    <div className="mx-4 mt-2 p-4 neural-glass rounded-lg border border-amber-200/50 dark:border-amber-700/30 shadow-neural">
-      <div className="flex items-center space-x-2 mb-2">
-        <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
-          <Search className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+    <div className="p-4 mb-2 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 text-amber-900 dark:text-amber-200 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div className="flex space-x-2">
+          <div className="flex-shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-medium">Agentic Model Capabilities</p>
+            <p className="text-xs mt-1">This model can use tools to search the web, analyze data, and generate code.</p>
+            {currentPersona && currentPersona.id !== 'default' && (
+              <p className="text-xs mt-2">Using <span className="font-semibold">{currentPersona.name}</span> persona</p>
+            )}
+          </div>
         </div>
-        <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
-          <Code className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-        </div>
-        <div className="p-1.5 bg-amber-100/80 dark:bg-amber-900/30 rounded-full">
-          <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-        </div>
-        <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-          Agentic Model Capabilities
-        </span>
-      </div>
-      <p className="text-xs text-amber-600 dark:text-amber-300 mb-2">
-        This model can use tools to search the web, analyze data, and generate code.
-      </p>
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30"
           onClick={onClearPersona}
-          className="h-6 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100/50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/30"
         >
-          <X className="h-3.5 w-3.5 mr-1" /> Clear
+          <X className="h-4 w-4" />
+          <span className="sr-only">Clear</span>
         </Button>
       </div>
     </div>

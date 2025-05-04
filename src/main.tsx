@@ -20,10 +20,10 @@ if ('serviceWorker' in navigator) {
             installingWorker.onstatechange = () => {
               if (installingWorker.state === 'installed') {
                 if (navigator.serviceWorker.controller) {
-                  console.log('New content is available; please refresh.');
+                  console.log('New W3J Assistant content is available; please refresh.');
                   // You can show a notification to the user here
                 } else {
-                  console.log('Content is cached for offline use.');
+                  console.log('W3J Assistant is cached for offline use.');
                 }
               }
             };

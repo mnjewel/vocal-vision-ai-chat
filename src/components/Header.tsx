@@ -17,7 +17,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle sidebar</span>
           </Button>
-          <div className="font-semibold text-lg neural-gradient-text">Neural Chat</div>
+          <div className="font-semibold text-lg neural-gradient-text">W3J Assistant</div>
         </div>
         <div className="flex items-center space-x-2">
           <PWAInstallPrompt />
