@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { MemoryManager } from '@/services/MemoryManager';
 import { Message } from '@/types/chat';
@@ -12,8 +11,6 @@ interface UseMemoryProps {
 export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<Message[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
-  const [memorySnapshots, setMemorySnapshots] = useState<any[]>([]);
   const memoryManagerRef = useRef<MemoryManager | null>(null);
 
   // Initialize memory manager when session changes
@@ -92,8 +89,6 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
   return {
     isLoading,
     searchResults,
-    branches,
-    memorySnapshots,
     memoryManager: memoryManagerRef.current,
     saveMessage,
     deleteMessage,

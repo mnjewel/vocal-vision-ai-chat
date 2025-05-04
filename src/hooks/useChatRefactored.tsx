@@ -44,7 +44,8 @@ export const useChat = () => {
   useEffect(() => {
     if (currentSessionId) {
       if (!memoryManagerRef.current) {
-        memoryManagerRef.current = new MemoryManager(currentSessionId);
+        // Using the constructor properly without using sessionId property
+        memoryManagerRef.current = new MemoryManager();
         
         // Load messages for the current session
         if (loadSessionMessages) {
@@ -55,7 +56,8 @@ export const useChat = () => {
       // Create a new memory manager with a new session ID if none exists
       const newSessionId = createNewSession();
       if (newSessionId) {
-        memoryManagerRef.current = new MemoryManager(newSessionId as unknown as string);
+        // Using the constructor properly
+        memoryManagerRef.current = new MemoryManager();
       }
     }
   }, [currentSessionId]);

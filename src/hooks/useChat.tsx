@@ -22,7 +22,6 @@ const useChat = () => {
     setCurrentSessionId,
     createNewSession,
     updateSessionTitle,
-    loadSessions: fetchSessions,
     deleteSession,
   } = useSessions();
 
@@ -119,7 +118,7 @@ const useChat = () => {
           await memoryManager.saveMessage({
             ...msg,
             sessionId: newSessionId,
-          } as Message);
+          });
         }
       }
 

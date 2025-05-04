@@ -22,8 +22,7 @@ export class MemoryManager {
     }
 
     try {
-      const branches = await this.loadBranches(sessionId);
-      
+      // We don't need to use branches here, so removing the reference
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -40,8 +39,7 @@ export class MemoryManager {
         id: msg.id,
         role: msg.role as MessageRole,
         content: msg.content,
-        timestamp: new Date(msg.created_at || new Date()),
-        sessionId: msg.session_id,
+        timestamp: new Date(msg.created_at || Date.now()),
         imageUrl: msg.image_url,
         model: msg.model
       }));
@@ -75,7 +73,8 @@ export class MemoryManager {
 
   async saveMessage(message: Message): Promise<void> {
     const { id, role, content } = message;
-    const sessionId = message.sessionId;
+    // Get the sessionId from the message or use a default
+    const sessionId = 'sessionId' in message ? message.sessionId as string : id; 
     
     if (!sessionId) {
       console.warn('No session ID provided for message:', message);
