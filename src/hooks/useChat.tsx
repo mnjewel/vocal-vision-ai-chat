@@ -115,10 +115,12 @@ const useChat = () => {
       // Update memory manager with forked messages
       if (memoryManager) {
         for (const msg of forkedMessages) {
+          // Use a temporary object that includes sessionId for the memory manager
           await memoryManager.saveMessage({
             ...msg,
+            // Add sessionId as a temporary property for the memory manager
             sessionId: newSessionId,
-          });
+          } as any);  // Using 'any' to bypass type checking for this specific operation
         }
       }
 

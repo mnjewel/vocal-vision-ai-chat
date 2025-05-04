@@ -73,8 +73,11 @@ export class MemoryManager {
 
   async saveMessage(message: Message): Promise<void> {
     const { id, role, content } = message;
-    // Get the sessionId from the message or use a default
-    const sessionId = 'sessionId' in message ? message.sessionId as string : id; 
+    
+    // Extract sessionId from message if available (using type assertion for compatibility)
+    // This allows our code to work with Message objects that might have a sessionId property
+    // added by useChat even though it's not in the actual Message type
+    const sessionId = (message as any).sessionId || id;
     
     if (!sessionId) {
       console.warn('No session ID provided for message:', message);

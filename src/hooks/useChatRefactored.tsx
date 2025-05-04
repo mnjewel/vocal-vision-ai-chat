@@ -54,11 +54,12 @@ export const useChat = () => {
       }
     } else {
       // Create a new memory manager with a new session ID if none exists
-      const newSessionId = createNewSession();
-      if (newSessionId) {
-        // Using the constructor properly
-        memoryManagerRef.current = new MemoryManager();
-      }
+      createNewSession().then(newSessionId => {
+        if (newSessionId) {
+          // Using the constructor properly
+          memoryManagerRef.current = new MemoryManager();
+        }
+      });
     }
   }, [currentSessionId]);
   
