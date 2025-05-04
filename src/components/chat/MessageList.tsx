@@ -13,7 +13,6 @@ interface MessageListProps {
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isTyping, 
-  onDeleteMessage,
   onSendMessage 
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);

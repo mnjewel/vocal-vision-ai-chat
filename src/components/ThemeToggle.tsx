@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useThemeMode } from "@/hooks/useThemeMode";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useThemeMode();
+  const { setTheme } = useThemeMode();
 
   return (
     <DropdownMenu>
