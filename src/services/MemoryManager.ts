@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Message } from '@/types/chat';
+import { Message, MessageRole } from '@/types/chat';
 import { v4 as uuidv4 } from 'uuid';
 
 export class MemoryManager {
@@ -23,8 +23,7 @@ export class MemoryManager {
 
     try {
       const branches = await this.loadBranches(sessionId);
-      const parentIds = branches.map(branch => branch.parent_id);
-
+      
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -37,11 +36,11 @@ export class MemoryManager {
       }
 
       // Format messages
-      const messages = data.map(msg => ({
+      const messages: Message[] = data.map((msg: any) => ({
         id: msg.id,
-        role: msg.role,
+        role: msg.role as MessageRole,
         content: msg.content,
-        timestamp: new Date(msg.created_at),
+        timestamp: new Date(msg.created_at || new Date()),
         sessionId: msg.session_id,
         imageUrl: msg.image_url,
         model: msg.model
@@ -59,7 +58,7 @@ export class MemoryManager {
     try {
       const { data, error } = await supabase
         .from('chat_sessions')
-        .select('id, parent_id')
+        .select('id')
         .eq('id', sessionId);
 
       if (error) {
@@ -75,7 +74,8 @@ export class MemoryManager {
   }
 
   async saveMessage(message: Message): Promise<void> {
-    const { id, role, content, sessionId, imageUrl, model } = message;
+    const { id, role, content } = message;
+    const sessionId = message.sessionId;
     
     if (!sessionId) {
       console.warn('No session ID provided for message:', message);
@@ -95,8 +95,8 @@ export class MemoryManager {
           session_id: sessionId,
           role,
           content,
-          image_url: imageUrl,
-          model
+          image_url: message.imageUrl,
+          model: message.model
         });
 
         if (error) {

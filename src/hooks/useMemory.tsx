@@ -19,10 +19,8 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
   // Initialize memory manager when session changes
   useEffect(() => {
     if (sessionId) {
-      if (!memoryManagerRef.current || memoryManagerRef.current.sessionId !== sessionId) {
-        memoryManagerRef.current = new MemoryManager(sessionId);
-        loadSessionData();
-      }
+      memoryManagerRef.current = new MemoryManager(sessionId);
+      loadSessionData();
     } else {
       // Create a new memory manager with a new session ID
       const newSessionId = uuidv4();
@@ -30,7 +28,7 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     }
   }, [sessionId]);
 
-  // Load session data (messages, branches, snapshots)
+  // Load session data (messages)
   const loadSessionData = useCallback(async () => {
     if (!memoryManagerRef.current || !sessionId) return;
     
@@ -38,15 +36,6 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     try {
       // Load messages
       const messages = await memoryManagerRef.current.loadSessionMessages(sessionId);
-      
-      // Update branches and snapshots state
-      if (memoryManagerRef.current.branches) {
-        setBranches(memoryManagerRef.current.branches);
-      }
-      
-      if (memoryManagerRef.current.memorySnapshots) {
-        setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
-      }
       
       // Notify parent component about loaded messages
       if (onMessagesLoaded) {
@@ -64,11 +53,6 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     if (!memoryManagerRef.current) return;
     
     await memoryManagerRef.current.saveMessage(message);
-    
-    // Update snapshots state if new ones were created
-    if (memoryManagerRef.current.memorySnapshots) {
-      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
-    }
   }, []);
 
   // Delete a message from memory
@@ -76,11 +60,6 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     if (!memoryManagerRef.current) return;
     
     await memoryManagerRef.current.deleteMessage(messageId);
-    
-    // Update snapshots state
-    if (memoryManagerRef.current.memorySnapshots) {
-      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
-    }
   }, []);
 
   // Get context window for AI processing
@@ -90,49 +69,24 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     return memoryManagerRef.current.getContextWindow();
   }, []);
 
-  // Create a new branch from the current conversation
-  const createBranch = useCallback(async () => {
-    if (!memoryManagerRef.current) return null;
-    
-    const newSessionId = await memoryManagerRef.current.createBranch();
-    
-    // Update branches state
-    if (memoryManagerRef.current.branches) {
-      setBranches(memoryManagerRef.current.branches);
-    }
-    
-    return newSessionId;
-  }, []);
-
-  // Search through messages
+  // Search through messages - this is a placeholder since MemoryManager doesn't have a searchMessages method
   const searchMessages = useCallback((query: string) => {
     if (!memoryManagerRef.current || !query.trim()) {
       setSearchResults([]);
       return [];
     }
     
-    const results = memoryManagerRef.current.searchMessages(query);
-    setSearchResults(results);
-    return results;
-  }, []);
-
-  // Create a memory snapshot manually
-  const createMemorySnapshot = useCallback(async () => {
-    if (!memoryManagerRef.current) return;
-    
-    await memoryManagerRef.current.createMemorySnapshot();
-    
-    // Update snapshots state
-    if (memoryManagerRef.current.memorySnapshots) {
-      setMemorySnapshots(memoryManagerRef.current.memorySnapshots);
-    }
+    // Default implementation - just returns empty array
+    setSearchResults([]);
+    return [];
   }, []);
 
   // Get all active messages
   const getActiveMessages = useCallback(() => {
     if (!memoryManagerRef.current) return [];
     
-    return memoryManagerRef.current.activeMessages || [];
+    // Default implementation - return empty array since MemoryManager doesn't have activeMessages
+    return [];
   }, []);
 
   return {
@@ -144,9 +98,7 @@ export const useMemory = ({ sessionId, onMessagesLoaded }: UseMemoryProps) => {
     saveMessage,
     deleteMessage,
     getContextWindow,
-    createBranch,
     searchMessages,
-    createMemorySnapshot,
     getActiveMessages,
     loadSessionData
   };

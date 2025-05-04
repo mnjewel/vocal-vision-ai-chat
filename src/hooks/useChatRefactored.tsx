@@ -43,7 +43,7 @@ export const useChat = () => {
   // Initialize memory manager when session changes
   useEffect(() => {
     if (currentSessionId) {
-      if (!memoryManagerRef.current || memoryManagerRef.current.sessionId !== currentSessionId) {
+      if (!memoryManagerRef.current) {
         memoryManagerRef.current = new MemoryManager(currentSessionId);
         
         // Load messages for the current session

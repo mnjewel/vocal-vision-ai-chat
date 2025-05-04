@@ -1,13 +1,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, ChatSession, Persona } from '@/types/chat';
-import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/types/chat';
 import { useAuthContext } from '@/components/AuthProvider';
 import useMessages from './useMessages';
 import { MemoryManager } from '@/services/MemoryManager';
 import useSessions from './useSessions';
-import { ModelManager } from '@/services/ModelManager';
 
 const useChat = () => {
   // State
@@ -23,10 +21,8 @@ const useChat = () => {
     currentSessionId,
     setCurrentSessionId,
     createNewSession,
-    renameSession,
-    loadSessions,
-    addSession,
-    updateSession,
+    updateSessionTitle,
+    loadSessions: fetchSessions,
     deleteSession,
   } = useSessions();
 
@@ -123,7 +119,7 @@ const useChat = () => {
           await memoryManager.saveMessage({
             ...msg,
             sessionId: newSessionId,
-          });
+          } as Message);
         }
       }
 
@@ -177,7 +173,7 @@ const useChat = () => {
     currentSessionId,
     setCurrentSessionId,
     createNewSession,
-    renameSession,
+    updateSessionTitle,
     deleteSession,
 
     // Message actions

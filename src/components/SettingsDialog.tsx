@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 const SettingsDialog = () => {
   const [open, setOpen] = useState(false);
-  const { autoSaveMessages, defaultModel, showAgentTools, setAutoSaveMessages, setDefaultModel, setShowAgentTools } = useSettingsStore();
+  const { autoSaveMessages, showAgentTools, setAutoSaveMessages, setShowAgentTools } = useSettingsStore();
 
   const handleAutoSaveToggle = (checked: boolean) => {
     setAutoSaveMessages(checked);
