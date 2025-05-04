@@ -7,10 +7,6 @@ import MobileFriendlyChatInterface from '@/components/chat/MobileFriendlyChatInt
 import useChat from '@/hooks/useChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface HeaderProps {
-  toggleSidebar: () => void;
-}
-
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -27,7 +23,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full neural-app-bg">
+    <div className="min-h-screen flex w-full neural-app-bg dark:text-white">
       {/* Overlay when sidebar is open on mobile */}
       {sidebarOpen && isMobile && (
         <div
