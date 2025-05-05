@@ -31,10 +31,13 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
       baseURL: 'https://api.groq.com/openai/v1',
     });
     
-    // Call ChatCompletion API
+    // Call ChatCompletion API with properly typed messages
     const response = await groq.chat.completions.create({
       model: request.model,
-      messages: request.messages,
+      messages: request.messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content
+      })),
       temperature: request.temperature || 0.7,
       max_tokens: request.max_tokens || 1024,
     });

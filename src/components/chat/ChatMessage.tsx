@@ -7,7 +7,7 @@ import ChatFeedbackSystem from './ChatFeedbackSystem';
 
 interface ChatMessageWrapperProps {
   message: Message;
-  onFeedback: (messageId: string, isPositive: boolean, comment?: string) => void;
+  onFeedback?: (messageId: string, isPositive: boolean, comment?: string) => void;
   children: React.ReactNode;
 }
 
@@ -23,7 +23,7 @@ const ChatMessageWrapper: React.FC<ChatMessageWrapperProps> = ({
   return (
     <div className="chat-message-wrapper">
       {children}
-      {showFeedback && (
+      {showFeedback && onFeedback && (
         <ChatFeedbackSystem 
           messageId={message.id}
           onFeedback={onFeedback}

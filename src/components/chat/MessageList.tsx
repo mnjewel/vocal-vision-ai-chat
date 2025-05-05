@@ -9,6 +9,7 @@ interface MessageListProps {
   onReaction?: (messageId: string, reaction: string, active: boolean) => void;
   onFollowUpClick?: (suggestion: string) => void;
   onDeleteMessage?: (id: string) => void;
+  renderMessageWrapper?: (message: Message, children: React.ReactNode) => React.ReactNode;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
@@ -16,7 +17,8 @@ const MessageList: React.FC<MessageListProps> = ({
   isTyping = false,
   onReaction,
   onFollowUpClick,
-  onDeleteMessage
+  onDeleteMessage,
+  renderMessageWrapper
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,15 +32,23 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <div className="flex-1 overflow-y-auto p-4 neural-messages-container">
       <div className="space-y-4 max-w-4xl mx-auto">
-        {messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            message={message}
-            onReaction={onReaction}
-            onFollowUpClick={onFollowUpClick}
-            onDelete={onDeleteMessage}
-          />
-        ))}
+        {messages.map((message) => {
+          const messageComponent = (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              onReaction={onReaction}
+              onFollowUpClick={onFollowUpClick}
+              onDelete={onDeleteMessage}
+            />
+          );
+          
+          return renderMessageWrapper ? (
+            <React.Fragment key={message.id}>
+              {renderMessageWrapper(message, messageComponent)}
+            </React.Fragment>
+          ) : messageComponent;
+        })}
         
         {isTyping && (
           <div className="message-assistant max-w-[85%] mr-auto">

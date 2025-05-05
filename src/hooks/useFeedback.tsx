@@ -36,12 +36,22 @@ export const useFeedback = () => {
       // Save to Supabase if logged in and auto-save is enabled
       if (user && autoSaveMessages) {
         try {
-          await supabase.from('message_feedback').insert({
+          // Instead of using a table that doesn't exist, log feedback to console
+          // and store it locally only for now
+          console.log('Would save feedback to Supabase:', { 
             message_id: messageId,
             user_id: user.id,
             is_positive: isPositive,
             comment: comment || null
           });
+          
+          // Commented out due to missing table
+          // await supabase.from('message_feedback').insert({
+          //   message_id: messageId,
+          //   user_id: user.id,
+          //   is_positive: isPositive,
+          //   comment: comment || null
+          // });
         } catch (error) {
           console.error('Failed to save feedback to database:', error);
           // Continue with local feedback only

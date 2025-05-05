@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { hasGroqKey } from '@/integrations/groq/client';
@@ -6,6 +7,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import useChat from '@/hooks/useChat';
 import useFeedback from '@/hooks/useFeedback';
 import { ModelManager } from '@/services/ModelManager';
+import { Persona } from '@/types/chat';
 
 // Import refactored components
 import MessageList from './MessageList';
@@ -41,13 +43,10 @@ const EnhancedChatInterface: React.FC = () => {
   // Local state
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
   const [showAPIKeyInput, setShowAPIKeyInput] = useState<boolean>(!hasGroqKey());
-  const [activeAPITab, setActiveAPITab] = useState<string>('groq');
+  const [activeAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPersonaSelector, setShowPersonaSelector] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>('');
-
-  // Get user from auth context
-  const { user } = useAuthContext();
 
   // Get settings from store
   const { defaultModel } = useSettingsStore();
@@ -57,6 +56,21 @@ const EnhancedChatInterface: React.FC = () => {
   useEffect(() => {
     setShowAPIKeyInput(!hasGroqKey());
   }, []);
+
+  // Check if model is agentic
+  const isAgentic = (model: string): boolean => {
+    return ['compound-beta', 'compound-beta-mini'].includes(model);
+  };
+
+  // Get available personas for the current model
+  const getAvailablePersonas = (): Persona[] => {
+    return ModelManager.getAvailablePersonasForModel(selectedModel);
+  };
+
+  // Get active capabilities for the current model
+  const getActiveCapabilities = () => {
+    return ModelManager.getCapabilitiesForModel(selectedModel);
+  };
 
   // Handle feedback submission
   const handleFeedback = async (messageId: string, isPositive: boolean, comment?: string) => {
@@ -70,7 +84,7 @@ const EnhancedChatInterface: React.FC = () => {
     // Check if current persona is suitable for new model
     if (!ModelManager.isPersonaSuitableForModel(activePersona, model)) {
       // Switch to default persona if not suitable
-      const availablePersonas = ModelManager.getAvailablePersonasForModel(model);
+      const availablePersonas = getAvailablePersonas();
       if (availablePersonas.length > 0) {
         setActivePersona(availablePersonas[0].id);
         toast.info(`Switched to ${availablePersonas[0].name} persona to match selected model capabilities`);
