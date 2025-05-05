@@ -3,12 +3,12 @@ import { OpenAI } from 'openai';
 import { getGroqConfig, hasGroqKey } from './client';
 import { toast } from 'sonner';
 
-interface GroqChatMessage {
+export interface GroqChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
-interface GroqChatCompletionRequest {
+export interface GroqChatCompletionRequest {
   model: string;
   messages: GroqChatMessage[];
   temperature?: number;

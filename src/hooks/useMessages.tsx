@@ -1,8 +1,7 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
-import { createGroqChatCompletion } from '@/integrations/groq/service';
+import { createGroqChatCompletion, GroqChatMessage } from '@/integrations/groq/service';
 import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -163,10 +162,10 @@ export const useMessages = ({
         }
 
         // Format messages for the API - Ensure role is one of the allowed types
-        const apiMessages = contextMessages.map(m => ({
+        const apiMessages: GroqChatMessage[] = contextMessages.map(m => ({
           role: (m.role === 'user' || m.role === 'assistant' || m.role === 'system') 
                 ? m.role 
-                : 'user' as const, // Type assertion to fix the issue
+                : 'user', // Type assertion to fix the issue
           content: m.content
         }));
 
@@ -175,7 +174,7 @@ export const useMessages = ({
         if (apiMessages.length > 0 && apiMessages[apiMessages.length - 1].role !== 'user') {
           console.warn('Last message is not from user, adding user message to context');
           apiMessages.push({
-            role: 'user' as const,
+            role: 'user',
             content: content
           });
         }
@@ -278,7 +277,7 @@ export const useMessages = ({
       setIsTyping(false);
       setPendingMessage('');
     }
-  }, [currentSessionId, messages, user, createNewSession, autoSaveMessages, activePersona, memoryManager]);
+  }, [currentSessionId, messages, user, createNewSession, autoSaveMessages, activePersona, memoryManager, setIsTyping, setMessages, setPendingMessage, setStreamingResponse]);
 
   // Update pending message
   const updatePendingMessage = useCallback((content: string) => {
