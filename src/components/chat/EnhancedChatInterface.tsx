@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { hasGroqKey } from '@/integrations/groq/client';
-import { useAuthContext } from '@/components/AuthProvider';
 import { useSettingsStore } from '@/stores/settingsStore';
 import useChat from '@/hooks/useChat';
 import useFeedback from '@/hooks/useFeedback';

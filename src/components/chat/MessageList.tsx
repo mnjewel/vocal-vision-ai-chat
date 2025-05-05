@@ -39,7 +39,7 @@ const MessageList: React.FC<MessageListProps> = ({
               message={message}
               onReaction={onReaction}
               onFollowUpClick={onFollowUpClick}
-              onDelete={onDeleteMessage}
+              onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
             />
           );
           

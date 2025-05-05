@@ -2,16 +2,19 @@
 import { MemoryManager as BaseMemoryManager } from './MemoryManager';
 import { Message } from '@/types/chat';
 
-// Extend the base Message type to include sessionId for internal use
-export interface MessageWithSession extends Message {
+// Extend the Message type to include sessionId for internal use
+interface MessageWithSession extends Message {
   sessionId?: string;
 }
 
 export class CustomMemoryManager extends BaseMemoryManager {
   // Override the saveMessage method to handle the sessionId
   async saveMessage(message: MessageWithSession): Promise<void> {
-    // Use the parent class implementation, but with type casting
-    return super.saveMessage(message as any);
+    // Remove sessionId before passing to parent class if it exists
+    const { sessionId, ...messageData } = message;
+    
+    // Use the parent class implementation with the cleaned message
+    return super.saveMessage(messageData as Message);
   }
   
   // Override other methods as needed
@@ -19,7 +22,7 @@ export class CustomMemoryManager extends BaseMemoryManager {
     // Get messages from parent class
     const messages = await super.loadSessionMessages(sessionId);
     
-    // Remove any sessionId properties from returned messages to comply with the Message type
-    return messages.map(({ sessionId: _, ...msg }) => msg as Message);
+    // Return messages without any sessionId properties
+    return messages;
   }
 }

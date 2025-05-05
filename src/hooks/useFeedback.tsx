@@ -1,85 +1,63 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/components/AuthProvider';
-import { useSettingsStore } from '@/stores/settingsStore';
+import { v4 as uuidv4 } from 'uuid';
+// Import only needed for Supabase integration, but removing for now
 
-interface FeedbackItem {
+// Type definitions
+interface FeedbackData {
+  id: string;
   messageId: string;
+  userId?: string;
   isPositive: boolean;
   comment?: string;
-  submittedAt: Date;
+  createdAt: Date;
 }
 
-export const useFeedback = () => {
-  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackItem[]>([]);
-  const { user } = useAuthContext();
-  const { autoSaveMessages } = useSettingsStore();
+export interface UseFeedbackResult {
+  submitFeedback: (messageId: string, isPositive: boolean, comment?: string) => Promise<void>;
+}
 
+/**
+ * A hook to handle user feedback for AI messages
+ */
+export const useFeedback = (): UseFeedbackResult => {
+  // Submit feedback handler
   const submitFeedback = useCallback(async (
-    messageId: string,
-    isPositive: boolean,
+    messageId: string, 
+    isPositive: boolean, 
     comment?: string
-  ) => {
+  ): Promise<void> => {
     try {
-      const newFeedback: FeedbackItem = {
+      // Create feedback data object
+      const feedbackData: FeedbackData = {
+        id: uuidv4(),
         messageId,
         isPositive,
         comment,
-        submittedAt: new Date()
+        createdAt: new Date(),
       };
+
+      console.log('Feedback submitted:', feedbackData);
       
-      // Add to local state
-      setFeedbackHistory(prev => [...prev, newFeedback]);
+      // For now just log feedback to console, but in the future
+      // we can store it in local storage or send to a backend
+      // when Supabase is connected
       
-      // Save to Supabase if logged in and auto-save is enabled
-      if (user && autoSaveMessages) {
-        try {
-          // Instead of using a table that doesn't exist, log feedback to console
-          // and store it locally only for now
-          console.log('Would save feedback to Supabase:', { 
-            message_id: messageId,
-            user_id: user.id,
-            is_positive: isPositive,
-            comment: comment || null
-          });
-          
-          // Commented out due to missing table
-          // await supabase.from('message_feedback').insert({
-          //   message_id: messageId,
-          //   user_id: user.id,
-          //   is_positive: isPositive,
-          //   comment: comment || null
-          // });
-        } catch (error) {
-          console.error('Failed to save feedback to database:', error);
-          // Continue with local feedback only
-        }
-      }
+      // Success notification
+      toast.success(
+        isPositive 
+          ? "Thank you for your positive feedback!" 
+          : "Thank you for helping us improve"
+      );
       
-      // Optionally notify user
-      const feedbackType = isPositive ? 'positive' : 'improvement';
-      toast.success(`Thank you for your ${feedbackType} feedback!`);
-      
-      // Return the feedback item
-      return newFeedback;
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      toast.error('Failed to submit feedback');
-      return null;
+      toast.error('Failed to submit feedback. Please try again.');
     }
-  }, [user, autoSaveMessages]);
+  }, []);
 
-  const getFeedbackForMessage = useCallback((messageId: string) => {
-    return feedbackHistory.find(item => item.messageId === messageId);
-  }, [feedbackHistory]);
-
-  return {
-    feedbackHistory,
-    submitFeedback,
-    getFeedbackForMessage
-  };
+  return { submitFeedback };
 };
 
 export default useFeedback;

@@ -4,7 +4,7 @@ import { getGroqConfig, hasGroqKey } from './client';
 import { toast } from 'sonner';
 
 interface GroqChatMessage {
-  role: string;
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
@@ -34,10 +34,7 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
     // Call ChatCompletion API with properly typed messages
     const response = await groq.chat.completions.create({
       model: request.model,
-      messages: request.messages.map(msg => ({
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: msg.content
-      })),
+      messages: request.messages as any, // Type assertion to avoid TypeScript complexity
       temperature: request.temperature || 0.7,
       max_tokens: request.max_tokens || 1024,
     });

@@ -221,12 +221,15 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            await supabase.from('messages').insert({
-              id: assistantMessage.id,
-              session_id: sessionId,
-              role: 'assistant',
-              content: response.content
-            });
+            // Handle the case where sessionId might be null
+            if (sessionId) {
+              await supabase.from('messages').insert({
+                id: assistantMessage.id,
+                session_id: sessionId,
+                role: 'assistant',
+                content: response.content
+              });
+            }
           } catch (error) {
             console.error('Failed to save assistant message to Supabase:', error);
           }
