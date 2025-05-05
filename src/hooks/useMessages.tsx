@@ -113,7 +113,7 @@ export const useMessages = ({
           try {
             await supabase.from('messages').insert({
               id: userMessageId,
-              session_id: sessionId, // Now we're sure sessionId is not null
+              session_id: sessionId,
               role: 'user',
               content: content
             });
@@ -225,7 +225,7 @@ export const useMessages = ({
           try {
             await supabase.from('messages').insert({
               id: assistantMessage.id,
-              session_id: sessionId, // Now we're sure sessionId is not null
+              session_id: sessionId,
               role: 'assistant',
               content: response.content
             });
