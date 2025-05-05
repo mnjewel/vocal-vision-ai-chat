@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion } from 'framer-motion';
 import { Copy, Check, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ChatSpeechControl from './ChatSpeechControl';
 
 interface ChatMessageProps {
   message: Message;
@@ -256,6 +257,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onFeedback
                 </div>
               )}
               {children}
+              
+              {/* Add speech control for assistant messages */}
+              {role === 'assistant' && !pending && content && (
+                <ChatSpeechControl text={content} messageId={id} />
+              )}
             </div>
           ) : (
             <div className={`${pending ? 'opacity-70 neural-typing' : ''}`}>
@@ -274,6 +280,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onFeedback
                 }`}
                 dangerouslySetInnerHTML={{ __html: formatContent() }}
               />
+              
+              {/* Add speech control for assistant messages */}
+              {role === 'assistant' && !pending && content && (
+                <ChatSpeechControl text={content} messageId={id} />
+              )}
             </div>
           )}
           

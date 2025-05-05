@@ -17,8 +17,9 @@ import ModelCapabilitiesBanner from './ModelCapabilitiesBanner';
 import ConversationActions from './ConversationActions';
 import ImagePreview from './ImagePreview';
 import ApiKeyInput from './ApiKeyInput';
-import SettingsDialog from '../SettingsDialog';
+import SettingsDialogEnhanced from '../SettingsDialogEnhanced';
 import VoiceConversationPanel from './VoiceConversationPanel';
+import ChatMessage from './ChatMessage';
 
 const EnhancedChatInterface: React.FC = () => {
   // Get original hooks
@@ -196,27 +197,12 @@ const EnhancedChatInterface: React.FC = () => {
   // Create a render wrapper function for messages that adds feedback functionality
   const renderMessageWithFeedback = (message: any, children: React.ReactNode) => {
     return message.role === 'assistant' ? (
-      <div className="message-with-feedback">
+      <ChatMessage
+        message={message}
+        onFeedback={handleFeedback}
+      >
         {children}
-        {message.role === 'assistant' && !message.pending && (
-          <div className="flex justify-end mt-1">
-            <div className="flex space-x-2 text-xs text-gray-500">
-              <button 
-                className="hover:text-gray-700 dark:hover:text-gray-300"
-                onClick={() => handleFeedback(message.id, true)}
-              >
-                Helpful
-              </button>
-              <button 
-                className="hover:text-gray-700 dark:hover:text-gray-300"
-                onClick={() => handleFeedback(message.id, false)}
-              >
-                Not helpful
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      </ChatMessage>
     ) : children;
   };
 
@@ -269,7 +255,7 @@ const EnhancedChatInterface: React.FC = () => {
             <VoiceConversationPanel onTranscriptReady={handleTranscriptReady} />
           </div>
 
-          <SettingsDialog />
+          <SettingsDialogEnhanced />
         </div>
 
         {/* Model Selector and Capabilities */}

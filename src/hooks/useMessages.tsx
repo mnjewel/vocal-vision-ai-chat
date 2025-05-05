@@ -165,8 +165,8 @@ export const useMessages = ({
         // Format messages for the API - Ensure role is one of the allowed types
         const apiMessages: GroqChatMessage[] = contextMessages.map(m => ({
           role: (m.role === 'user' || m.role === 'assistant' || m.role === 'system') 
-                ? m.role 
-                : 'user', // Type assertion to fix the issue
+                ? m.role as "user" | "assistant" | "system"
+                : "user", // Type assertion to fix the issue
           content: m.content
         }));
 
@@ -223,10 +223,10 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Add null check for sessionId before using it
+            // Only insert if sessionId is not null
             await supabase.from('messages').insert({
               id: assistantMessage.id,
-              session_id: sessionId, // Here sessionId is guaranteed to be non-null due to checks above
+              session_id: sessionId,
               role: 'assistant',
               content: response.content
             });

@@ -15,7 +15,7 @@ import ApiKeyInput from './ApiKeyInput';
 import { hasGroqKey } from '@/integrations/groq/client';
 import ModelCapabilitiesBanner from './ModelCapabilitiesBanner';
 import ConversationActions from './ConversationActions';
-import SettingsDialog from '../SettingsDialog';
+import SettingsDialogEnhanced from '../SettingsDialogEnhanced';
 import VoiceConversationPanel from './VoiceConversationPanel';
 
 const MobileFriendlyChatInterface: React.FC = () => {
@@ -228,7 +228,7 @@ const MobileFriendlyChatInterface: React.FC = () => {
             <VoiceConversationPanel onTranscriptReady={handleTranscriptReady} />
           </div>
 
-          <SettingsDialog />
+          <SettingsDialogEnhanced />
         </div>
 
         {/* Model Selector and Capabilities */}
