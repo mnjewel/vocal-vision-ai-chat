@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 import { MemoryManager } from '@/services/MemoryManager';
 import useMessages from './useMessages';
@@ -55,7 +54,7 @@ export const useChat = () => {
     } else {
       // Create a new memory manager with a new session ID if none exists
       createNewSession().then(newSessionId => {
-        if (newSessionId !== null) {
+        if (newSessionId) { // Fixed condition check here
           // Using the constructor properly
           memoryManagerRef.current = new MemoryManager();
         }

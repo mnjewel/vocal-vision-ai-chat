@@ -106,7 +106,9 @@ const ChatInterface: React.FC = () => {
 
     const isGroqModel = groqModels.includes(selectedModel);
 
-    if ((isGroqModel && !hasGroqKey())) {
+    // Check for API key before attempting to send message
+    if (isGroqModel && !hasGroqKey()) {
+      toast.error('Please configure your Groq API key to use this model');
       setShowAPIKeyInput(true);
       return;
     }
@@ -117,7 +119,16 @@ const ChatInterface: React.FC = () => {
       setUploadedImage(null);
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
+      
+      // Show API key input if the error is related to API key
+      if (error instanceof Error && 
+          (error.message.includes('API key') || 
+           error.message.includes('authentication') || 
+           error.message.includes('unauthorized'))) {
+        setShowAPIKeyInput(true);
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

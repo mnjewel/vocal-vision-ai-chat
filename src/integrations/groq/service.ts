@@ -1,73 +1,53 @@
 
-import OpenAI from 'openai';
-import { getGroqConfig } from './client';
+import { OpenAI } from 'openai';
+import { getGroqConfig, hasGroqKey } from './client';
+import { toast } from 'sonner';
 
-const getGroqClient = () => {
+interface GroqChatMessage {
+  role: string;
+  content: string;
+}
+
+interface GroqChatCompletionRequest {
+  model: string;
+  messages: GroqChatMessage[];
+  temperature?: number;
+  max_tokens?: number;
+}
+
+export const createGroqChatCompletion = async (request: GroqChatCompletionRequest) => {
   try {
+    // Check if API key is available
+    if (!hasGroqKey()) {
+      throw new Error('Groq API key not configured');
+    }
+    
+    // Get API key
     const { apiKey } = getGroqConfig();
     
-    return new OpenAI({
+    // Create OpenAI client with base URL for Groq
+    const groq = new OpenAI({
       apiKey,
       baseURL: 'https://api.groq.com/openai/v1',
     });
+    
+    // Call ChatCompletion API
+    const response = await groq.chat.completions.create({
+      model: request.model,
+      messages: request.messages,
+      temperature: request.temperature || 0.7,
+      max_tokens: request.max_tokens || 1024,
+    });
+    
+    // Return the response
+    if (response.choices && response.choices.length > 0 && response.choices[0].message) {
+      return response.choices[0].message;
+    }
+    
+    throw new Error('Invalid response from Groq API');
   } catch (error) {
-    console.error('Failed to initialize Groq client:', error);
-    throw new Error('Groq API key not configured. Please add your API key in settings.');
-  }
-};
-
-export const createGroqChatCompletion = async (
-  request: any
-) => {
-  try {
-    const groq = getGroqClient();
-    const response = await groq.chat.completions.create(request);
-    const content = response.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('Groq API returned an empty response');
-    }
-
-    return {
-      role: 'assistant',
-      content: content,
-    };
-  } catch (error: any) {
-    console.error('Groq API error:', error);
-    throw new Error(
-      error.message || 'Failed to generate completion from Groq API'
-    );
-  }
-};
-
-interface FunctionCall {
-  name: string;
-  arguments: string;
-}
-
-export const handleFunctionCall = async (call: FunctionCall) => {
-  try {
-    if (!call || !call.name) {
-      console.warn('Invalid function call:', call);
-      return {
-        role: 'system',
-        content: "Invalid function call provided."
-      };
-    }
-
-    console.log(`Function call ${call.name} with args:`, call.arguments);
-
-    // Add more function handlers here
-    return {
-      role: 'system',
-      content: `Function ${call.name} called successfully with arguments ${call.arguments}.`
-    };
-
-  } catch (error: any) {
-    console.error("Error handling function call:", error);
-    return {
-      role: 'system',
-      content: `Error executing function ${call.name}: ${error.message}`
-    };
+    console.error('Error calling Groq API:', error);
+    toast.error('Error calling AI model. Please check your API key and try again.');
+    throw error;
   }
 };

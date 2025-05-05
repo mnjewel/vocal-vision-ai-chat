@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/types/chat';
@@ -115,12 +114,11 @@ const useChat = () => {
       // Update memory manager with forked messages
       if (memoryManager) {
         for (const msg of forkedMessages) {
-          // Add the sessionId as a property for the memory manager, but use type assertion
-          // to avoid TypeScript errors since sessionId is not part of the Message type
+          // Add the sessionId property using proper typing with the MessageWithSession interface
           await memoryManager.saveMessage({
             ...msg,
             sessionId: newSessionId,
-          } as any); // Using 'any' to bypass type checking for this specific operation
+          } as any); // Type assertion needed since Message doesn't include sessionId
         }
       }
 
