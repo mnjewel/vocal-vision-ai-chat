@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -164,8 +165,8 @@ export const useMessages = ({
         // Format messages for the API - Ensure role is one of the allowed types
         const apiMessages = contextMessages.map(m => ({
           role: (m.role === 'user' || m.role === 'assistant' || m.role === 'system') 
-                ? m.role as 'user' | 'assistant' | 'system'
-                : 'user', // Default to user if role is not valid
+                ? m.role 
+                : 'user' as const, // Type assertion to fix the issue
           content: m.content
         }));
 
@@ -222,10 +223,10 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Check that sessionId is not null before trying to save
+            // Ensure sessionId is not null before saving
             await supabase.from('messages').insert({
               id: assistantMessage.id,
-              session_id: sessionId,
+              session_id: sessionId, 
               role: 'assistant',
               content: response.content
             });

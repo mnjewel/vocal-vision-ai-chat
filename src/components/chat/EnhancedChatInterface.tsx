@@ -19,7 +19,6 @@ import ImagePreview from './ImagePreview';
 import ApiKeyInput from './ApiKeyInput';
 import SettingsDialog from '../SettingsDialog';
 import VoiceConversationPanel from './VoiceConversationPanel';
-import ChatMessageWrapper from './ChatMessage';
 
 const EnhancedChatInterface: React.FC = () => {
   // Get original hooks
@@ -194,6 +193,33 @@ const EnhancedChatInterface: React.FC = () => {
     return availablePersonas.find(p => p.id === activePersona) || availablePersonas[0];
   };
 
+  // Create a render wrapper function for messages that adds feedback functionality
+  const renderMessageWithFeedback = (message: any, children: React.ReactNode) => {
+    return message.role === 'assistant' ? (
+      <div className="message-with-feedback">
+        {children}
+        {message.role === 'assistant' && !message.pending && (
+          <div className="flex justify-end mt-1">
+            <div className="flex space-x-2 text-xs text-gray-500">
+              <button 
+                className="hover:text-gray-700 dark:hover:text-gray-300"
+                onClick={() => handleFeedback(message.id, true)}
+              >
+                Helpful
+              </button>
+              <button 
+                className="hover:text-gray-700 dark:hover:text-gray-300"
+                onClick={() => handleFeedback(message.id, false)}
+              >
+                Not helpful
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    ) : children;
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* API Key Input */}
@@ -215,14 +241,7 @@ const EnhancedChatInterface: React.FC = () => {
           messages={messages}
           isTyping={isTyping}
           onDeleteMessage={handleDeleteMessage}
-          renderMessageWrapper={(message, children) => (
-            <ChatMessageWrapper 
-              message={message}
-              onFeedback={handleFeedback}
-            >
-              {children}
-            </ChatMessageWrapper>
-          )}
+          renderMessageWrapper={renderMessageWithFeedback}
         />
       </div>
 

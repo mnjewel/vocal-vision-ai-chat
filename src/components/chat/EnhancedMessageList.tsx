@@ -38,7 +38,6 @@ const EnhancedMessageList: React.FC<EnhancedMessageListProps> = ({
           <ChatMessageWrapper
             key={message.id}
             message={message}
-            onFeedback={undefined}
             onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
           >
             <div className="message-content p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">

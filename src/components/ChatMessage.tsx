@@ -8,13 +8,17 @@ import { Button } from '@/components/ui/button';
 
 interface ChatMessageProps {
   message: Message;
+  onFeedback?: (messageId: string, isPositive: boolean, comment?: string) => Promise<void>;
   onDelete?: (id: string) => void;
   id?: string;
+  children?: React.ReactNode;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, id: elementId }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onFeedback, id: elementId, children }) => {
   const { id, role, content, timestamp, imageUrl, pending } = message;
   const [copied, setCopied] = useState(false);
+  const [showFeedbackOptions, setShowFeedbackOptions] = useState(false);
+  const [feedbackComment, setFeedbackComment] = useState('');
 
   const getMessageClass = () => {
     if (role === 'user') return 'message-user rounded-2xl rounded-br-sm';
@@ -54,6 +58,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, id: elemen
     }
   };
 
+  // Handle feedback submission
+  const submitFeedback = async (isPositive: boolean) => {
+    if (onFeedback) {
+      await onFeedback(id, isPositive, feedbackComment);
+      setShowFeedbackOptions(false);
+      setFeedbackComment('');
+    }
+  };
+
   // Format content with proper markdown and code blocks
   const formatContent = () => {
     if (!content) return '';
@@ -73,7 +86,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, id: elemen
     // Replace headings (##, ###)
     const withHeadings = withInlineCode
       .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-5 mb-3">$1</h2>');
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-5 mb-3">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-6 mb-4">$1</h1>');
 
     // Replace bullet points
     const withBullets = withHeadings
@@ -120,6 +134,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, id: elemen
       .map((paragraph: string) => {
         if (
           paragraph.startsWith('<pre') ||
+          paragraph.startsWith('<h1') ||
           paragraph.startsWith('<h2') ||
           paragraph.startsWith('<h3') ||
           paragraph.startsWith('<ul') ||
@@ -229,23 +244,84 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, id: elemen
               )}
             </div>
           </div>
-          <div className={`${pending ? 'opacity-70 neural-typing' : ''}`}>
-            {imageUrl && (
-              <div className="mb-3">
-                <img
-                  src={imageUrl}
-                  alt="Uploaded content"
-                  className="max-h-64 rounded-md object-contain border border-gray-200 dark:border-gray-700"
-                />
-              </div>
-            )}
-            <div
-              className={`prose prose-sm md:prose-base max-w-none dark:prose-invert prose-headings:my-2 prose-p:my-1.5 prose-pre:my-2 ${
-                pending ? 'typing-indicator' : ''
-              }`}
-              dangerouslySetInnerHTML={{ __html: formatContent() }}
-            />
-          </div>
+          {children ? (
+            <div className={`${pending ? 'opacity-70 neural-typing' : ''}`}>
+              {imageUrl && (
+                <div className="mb-3">
+                  <img
+                    src={imageUrl}
+                    alt="Uploaded content"
+                    className="max-h-64 rounded-md object-contain border border-gray-200 dark:border-gray-700"
+                  />
+                </div>
+              )}
+              {children}
+            </div>
+          ) : (
+            <div className={`${pending ? 'opacity-70 neural-typing' : ''}`}>
+              {imageUrl && (
+                <div className="mb-3">
+                  <img
+                    src={imageUrl}
+                    alt="Uploaded content"
+                    className="max-h-64 rounded-md object-contain border border-gray-200 dark:border-gray-700"
+                  />
+                </div>
+              )}
+              <div
+                className={`prose prose-sm md:prose-base max-w-none dark:prose-invert prose-headings:my-2 prose-p:my-1.5 prose-pre:my-2 ${
+                  pending ? 'typing-indicator' : ''
+                }`}
+                dangerouslySetInnerHTML={{ __html: formatContent() }}
+              />
+            </div>
+          )}
+          
+          {/* Feedback UI (only for assistant messages) */}
+          {role === 'assistant' && onFeedback && !pending && (
+            <div className="mt-2 text-xs">
+              {!showFeedbackOptions ? (
+                <div className="flex items-center justify-end gap-2 mt-1">
+                  <button 
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-xs"
+                    onClick={() => setShowFeedbackOptions(true)}
+                  >
+                    Provide feedback
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg">
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      className="bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-800/50 text-green-700 dark:text-green-400 px-2 py-1 rounded text-xs"
+                      onClick={() => submitFeedback(true)}
+                    >
+                      Helpful
+                    </button>
+                    <button
+                      className="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50 text-red-700 dark:text-red-400 px-2 py-1 rounded text-xs"
+                      onClick={() => submitFeedback(false)}
+                    >
+                      Not Helpful
+                    </button>
+                    <button
+                      className="ml-auto text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-xs"
+                      onClick={() => setShowFeedbackOptions(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <textarea
+                    value={feedbackComment}
+                    onChange={(e) => setFeedbackComment(e.target.value)}
+                    placeholder="Optional feedback comment..."
+                    className="w-full text-xs p-2 border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
+                    rows={2}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

@@ -7,14 +7,12 @@ interface MessageListProps {
   messages: Message[];
   isTyping?: boolean;
   onDeleteMessage?: (id: string) => void;
-  onFollowUpClick?: (suggestion: string) => void;
   renderMessageWrapper?: (message: Message, children: React.ReactNode) => React.ReactNode;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isTyping = false,
-  onFollowUpClick,
   onDeleteMessage,
   renderMessageWrapper
 }) => {
@@ -35,7 +33,6 @@ const MessageList: React.FC<MessageListProps> = ({
             <ChatMessageWrapper
               key={message.id}
               message={message}
-              onFeedback={undefined}
               onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
             >
               <div className={`message-${message.role} p-4 rounded-lg ${
