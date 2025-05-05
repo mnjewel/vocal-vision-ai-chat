@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX } from 'lucide-react';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
@@ -9,13 +9,12 @@ import { useSettingsStore } from '@/stores/settingsStore';
 
 interface ChatSpeechControlProps {
   text: string;
-  messageId: string;
+  messageId: string; // Keeping for future use if needed
 }
 
-const ChatSpeechControl: React.FC<ChatSpeechControlProps> = ({ text, messageId }) => {
+const ChatSpeechControl: React.FC<ChatSpeechControlProps> = ({ text }) => {
   const [useElevenLabs, setUseElevenLabs] = useState<boolean>(false);
   const [isPlayingElevenLabs, setIsPlayingElevenLabs] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   
   // Get speech synthesis settings from store
@@ -49,7 +48,6 @@ const ChatSpeechControl: React.FC<ChatSpeechControlProps> = ({ text, messageId }
         const url = await speakText(cleanText, elevenlabsVoiceId);
         
         if (url) {
-          setAudioUrl(url);
           if (audioRef.current) {
             audioRef.current.src = url;
             audioRef.current.onended = () => setIsPlayingElevenLabs(false);
@@ -76,7 +74,7 @@ const ChatSpeechControl: React.FC<ChatSpeechControlProps> = ({ text, messageId }
   };
 
   // Stop playback when component unmounts
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (isPlaying) stop();
       if (audioRef.current) {

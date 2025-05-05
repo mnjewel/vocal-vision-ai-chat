@@ -6,7 +6,6 @@ import EnhancedChatInterface from '@/components/chat/EnhancedChatInterface';
 import MobileFriendlyChatInterface from '@/components/chat/MobileFriendlyChatInterface';
 import useChat from '@/hooks/useChat';
 import { useIsMobile } from '@/hooks/use-mobile';
-import SettingsDialogEnhanced from '@/components/SettingsDialogEnhanced';
 
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

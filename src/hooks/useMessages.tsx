@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -220,7 +219,7 @@ export const useMessages = ({
           await memoryManager.saveMessage(assistantMessage);
         }
 
-        // Save to Supabase if logged in
+        // Save to Supabase if logged in and sessionId exists
         if (user && autoSaveMessages && sessionId) {
           try {
             // Only insert if sessionId is not null

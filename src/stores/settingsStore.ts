@@ -14,6 +14,7 @@ interface SettingsState {
   showFollowupSuggestions: boolean;
   enableTextToSpeech: boolean;
   preferElevenLabs: boolean;
+  showAgentTools: boolean;
   
   setDefaultModel: (model: string) => void;
   setDefaultApiTab: (tab: string) => void;
@@ -26,6 +27,7 @@ interface SettingsState {
   setShowFollowupSuggestions: (show: boolean) => void;
   setEnableTextToSpeech: (enable: boolean) => void;
   setPreferElevenLabs: (prefer: boolean) => void;
+  setShowAgentTools: (show: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -42,6 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
       showFollowupSuggestions: true,
       enableTextToSpeech: true,
       preferElevenLabs: false,
+      showAgentTools: false,
 
       setDefaultModel: (model) => set({ defaultModel: model }),
       setDefaultApiTab: (tab) => set({ defaultApiTab: tab }),
@@ -54,6 +57,7 @@ export const useSettingsStore = create<SettingsState>()(
       setShowFollowupSuggestions: (show) => set({ showFollowupSuggestions: show }),
       setEnableTextToSpeech: (enable) => set({ enableTextToSpeech: enable }),
       setPreferElevenLabs: (prefer) => set({ preferElevenLabs: prefer }),
+      setShowAgentTools: (show) => set({ showAgentTools: show }),
     }),
     {
       name: 'neural-chat-settings',
