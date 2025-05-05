@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Message } from '@/types/chat';
-import ChatMessage from '@/components/chat/ChatMessage';
+import ChatMessageWrapper from '@/components/chat/ChatMessage';
 
 interface EnhancedMessageListProps {
   messages: Message[];
@@ -33,12 +33,20 @@ const EnhancedMessageList: React.FC<EnhancedMessageListProps> = ({
           return null;
         }
         
+        // Create the message component without onDelete prop
         const messageComponent = (
-          <ChatMessage
+          <ChatMessageWrapper
             key={message.id}
             message={message}
+            // Pass onDelete as a function that calls onDeleteMessage with the ID
             onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
-          />
+          >
+            <div className="message-content p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+              <div className="message-body">
+                {message.content}
+              </div>
+            </div>
+          </ChatMessageWrapper>
         );
         
         // Wrap the message if a wrapper function is provided

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Message } from '@/types/chat';
-import ChatMessage from '../chat/ChatMessage';
+import ChatMessageWrapper from './ChatMessage';
 
 interface MessageListProps {
   messages: Message[];
@@ -34,13 +34,23 @@ const MessageList: React.FC<MessageListProps> = ({
       <div className="space-y-4 max-w-4xl mx-auto">
         {messages.map((message) => {
           const messageComponent = (
-            <ChatMessage
+            <ChatMessageWrapper
               key={message.id}
               message={message}
               onReaction={onReaction}
               onFollowUpClick={onFollowUpClick}
               onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
-            />
+            >
+              <div className={`message-${message.role} p-4 rounded-lg ${
+                message.role === 'user' ? 'bg-blue-50 dark:bg-blue-900/20 ml-auto' : 
+                message.role === 'assistant' ? 'bg-white dark:bg-gray-800 mr-auto' :
+                'bg-gray-100 dark:bg-gray-700/50 mx-auto'
+              } shadow-sm max-w-[85%]`}>
+                <div className="message-content">
+                  {message.content}
+                </div>
+              </div>
+            </ChatMessageWrapper>
           );
           
           return renderMessageWrapper ? (

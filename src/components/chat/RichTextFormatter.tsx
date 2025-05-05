@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Copy, VolumeX, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -10,7 +10,7 @@ interface RichTextFormatterProps {
 const RichTextFormatter: React.FC<RichTextFormatterProps> = ({ content }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Function to convert text to speech
   const speakText = () => {

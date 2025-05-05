@@ -162,9 +162,11 @@ export const useMessages = ({
           ];
         }
 
-        // Format messages for the API
+        // Format messages for the API - Ensure role is one of the allowed types
         const apiMessages = contextMessages.map(m => ({
-          role: m.role,
+          role: (m.role === 'user' || m.role === 'assistant' || m.role === 'system') 
+                ? m.role as 'user' | 'assistant' | 'system'
+                : 'user', // Default to user if role is not valid
           content: m.content
         }));
 
@@ -221,7 +223,7 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Handle the case where sessionId might be null
+            // Only proceed if sessionId is not null
             if (sessionId) {
               await supabase.from('messages').insert({
                 id: assistantMessage.id,

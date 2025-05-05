@@ -32,9 +32,11 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
     });
     
     // Call ChatCompletion API with properly typed messages
+    // The OpenAI types expect additional fields that Groq might not use
+    // We need to satisfy the TypeScript compiler by properly casting
     const response = await groq.chat.completions.create({
       model: request.model,
-      messages: request.messages as any, // Type assertion to avoid TypeScript complexity
+      messages: request.messages as any, // Type assertion needed due to OpenAI types
       temperature: request.temperature || 0.7,
       max_tokens: request.max_tokens || 1024,
     });
