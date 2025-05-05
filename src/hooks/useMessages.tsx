@@ -223,10 +223,11 @@ export const useMessages = ({
         // Save to Supabase if logged in and sessionId exists
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Ensure sessionId is a string before using it
+            // Fix for TS2322 and TS2769: sessionId is guaranteed to be string here due to the if condition check
+            const validSessionId: string = sessionId;
             await supabase.from('messages').insert({
               id: assistantMessage.id,
-              session_id: sessionId,
+              session_id: validSessionId,
               role: 'assistant',
               content: response.content
             });
