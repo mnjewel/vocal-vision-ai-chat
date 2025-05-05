@@ -2,7 +2,6 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-// Import only needed for Supabase integration, but removing for now
 
 // Type definitions
 interface FeedbackData {

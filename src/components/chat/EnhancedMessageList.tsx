@@ -33,12 +33,12 @@ const EnhancedMessageList: React.FC<EnhancedMessageListProps> = ({
           return null;
         }
         
-        // Create the message component without onDelete prop
+        // Create the message component
         const messageComponent = (
           <ChatMessageWrapper
             key={message.id}
             message={message}
-            // Pass onDelete as a function that calls onDeleteMessage with the ID
+            onFeedback={undefined}
             onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
           >
             <div className="message-content p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">

@@ -31,12 +31,16 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
       baseURL: 'https://api.groq.com/openai/v1',
     });
     
+    // Ensure all messages have valid role types
+    const validatedMessages = request.messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    
     // Call ChatCompletion API with properly typed messages
-    // The OpenAI types expect additional fields that Groq might not use
-    // We need to satisfy the TypeScript compiler by properly casting
     const response = await groq.chat.completions.create({
       model: request.model,
-      messages: request.messages as any, // Type assertion needed due to OpenAI types
+      messages: validatedMessages as any, // Type assertion needed due to OpenAI types
       temperature: request.temperature || 0.7,
       max_tokens: request.max_tokens || 1024,
     });

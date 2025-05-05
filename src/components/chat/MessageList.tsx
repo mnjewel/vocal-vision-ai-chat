@@ -6,16 +6,14 @@ import ChatMessageWrapper from './ChatMessage';
 interface MessageListProps {
   messages: Message[];
   isTyping?: boolean;
-  onReaction?: (messageId: string, reaction: string, active: boolean) => void;
-  onFollowUpClick?: (suggestion: string) => void;
   onDeleteMessage?: (id: string) => void;
+  onFollowUpClick?: (suggestion: string) => void;
   renderMessageWrapper?: (message: Message, children: React.ReactNode) => React.ReactNode;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isTyping = false,
-  onReaction,
   onFollowUpClick,
   onDeleteMessage,
   renderMessageWrapper
@@ -37,8 +35,7 @@ const MessageList: React.FC<MessageListProps> = ({
             <ChatMessageWrapper
               key={message.id}
               message={message}
-              onReaction={onReaction}
-              onFollowUpClick={onFollowUpClick}
+              onFeedback={undefined}
               onDelete={onDeleteMessage ? () => onDeleteMessage(message.id) : undefined}
             >
               <div className={`message-${message.role} p-4 rounded-lg ${
