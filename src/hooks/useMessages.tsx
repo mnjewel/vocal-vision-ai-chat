@@ -111,9 +111,11 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
+            // Fix for TS2322: Ensure sessionId is a string with type assertion
+            const validSessionId: string = sessionId;
             await supabase.from('messages').insert({
               id: userMessageId,
-              session_id: sessionId,
+              session_id: validSessionId,
               role: 'user',
               content: content
             });

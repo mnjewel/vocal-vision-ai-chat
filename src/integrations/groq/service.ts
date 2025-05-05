@@ -25,10 +25,11 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
     // Get API key
     const { apiKey } = getGroqConfig();
     
-    // Create OpenAI client with base URL for Groq
+    // Create OpenAI client with base URL for Groq and specific configuration to handle browser environment
     const groq = new OpenAI({
       apiKey,
       baseURL: 'https://api.groq.com/openai/v1',
+      dangerouslyAllowBrowser: true // Add this flag to allow browser usage (with appropriate warnings to user)
     });
     
     // Call ChatCompletion API
