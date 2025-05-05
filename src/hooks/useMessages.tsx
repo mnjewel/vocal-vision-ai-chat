@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -222,10 +223,10 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Ensure sessionId is not null before saving
+            // Add null check for sessionId before using it
             await supabase.from('messages').insert({
               id: assistantMessage.id,
-              session_id: sessionId, 
+              session_id: sessionId, // Here sessionId is guaranteed to be non-null due to checks above
               role: 'assistant',
               content: response.content
             });
