@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { hasGroqKey } from '@/integrations/groq/client';
 import { useAuthContext } from '@/components/AuthProvider';
 import { useSettingsStore } from '@/stores/settingsStore';
 import useChat from '@/hooks/useChat';
+import useFeedback from '@/hooks/useFeedback';
 import { ModelManager } from '@/services/ModelManager';
 
 // Import refactored components
@@ -18,9 +18,10 @@ import ImagePreview from './ImagePreview';
 import ApiKeyInput from './ApiKeyInput';
 import SettingsDialog from '../SettingsDialog';
 import VoiceConversationPanel from './VoiceConversationPanel';
+import ChatMessageWrapper from './ChatMessage';
 
 const EnhancedChatInterface: React.FC = () => {
-  // State from useChat hook
+  // Get original hooks
   const {
     messages,
     isTyping,
@@ -33,6 +34,9 @@ const EnhancedChatInterface: React.FC = () => {
     streamingResponse,
     clearConversation,
   } = useChat();
+
+  // Add feedback system hook
+  const { submitFeedback } = useFeedback();
 
   // Local state
   const [uploadedImage, setUploadedImage] = useState<{ file: File; url: string } | null>(null);
@@ -49,35 +53,15 @@ const EnhancedChatInterface: React.FC = () => {
   const { defaultModel } = useSettingsStore();
   const [selectedModel, setSelectedModel] = useState<string>(defaultModel);
 
-  // Check if model is agentic
-  const isAgentic = (model: string): boolean => {
-    return ['compound-beta', 'compound-beta-mini'].includes(model);
-  };
-
-  // Get available personas for the current model
-  const getAvailablePersonas = () => {
-    return ModelManager.getAvailablePersonasForModel(selectedModel);
-  };
-
-  // Get active capabilities for the current model
-  const getActiveCapabilities = () => {
-    return ModelManager.getCapabilitiesForModel(selectedModel);
-  };
-
-  // Check selected model type
+  // Recheck API key on mount
   useEffect(() => {
-    const groqModels = [
-      'llama3-8b-8192',
-      'llama3-70b-8192',
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'gemma2-9b-it',
-      'deepseek-r1-distill-llama-70b',
-      'compound-beta',
-      'compound-beta-mini'
-    ];
-    setActiveAPITab(groqModels.includes(selectedModel) ? 'groq' : 'openai');
-  }, [selectedModel]);
+    setShowAPIKeyInput(!hasGroqKey());
+  }, []);
+
+  // Handle feedback submission
+  const handleFeedback = async (messageId: string, isPositive: boolean, comment?: string) => {
+    await submitFeedback(messageId, isPositive, comment);
+  };
 
   // Handle model change
   const handleModelChange = (model: string) => {
@@ -111,6 +95,7 @@ const EnhancedChatInterface: React.FC = () => {
 
     if ((isGroqModel && !hasGroqKey())) {
       setShowAPIKeyInput(true);
+      toast.error('Please enter your Groq API key to continue');
       return;
     }
 
@@ -120,7 +105,7 @@ const EnhancedChatInterface: React.FC = () => {
       setUploadedImage(null);
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please check your API key and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -151,6 +136,7 @@ const EnhancedChatInterface: React.FC = () => {
   // Handle API key saved
   const handleKeySaved = () => {
     setShowAPIKeyInput(false);
+    toast.success('API key saved successfully');
   };
 
   // Handle fork conversation
@@ -198,7 +184,7 @@ const EnhancedChatInterface: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* API Key Input */}
-      {(!user || showAPIKeyInput) && (
+      {showAPIKeyInput && (
         <ApiKeyInput onKeySaved={handleKeySaved} />
       )}
 
@@ -210,12 +196,22 @@ const EnhancedChatInterface: React.FC = () => {
         onClearPersona={() => setActivePersona('default')}
       />
 
-      {/* Message List */}
-      <MessageList
-        messages={messages}
-        isTyping={isTyping}
-        onDeleteMessage={handleDeleteMessage}
-      />
+      {/* Message List with Feedback */}
+      <div className="flex-1 overflow-y-auto">
+        <MessageList
+          messages={messages}
+          isTyping={isTyping}
+          onDeleteMessage={handleDeleteMessage}
+          renderMessageWrapper={(message, children) => (
+            <ChatMessageWrapper 
+              message={message}
+              onFeedback={handleFeedback}
+            >
+              {children}
+            </ChatMessageWrapper>
+          )}
+        />
+      </div>
 
       {/* Image Preview */}
       <ImagePreview

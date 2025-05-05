@@ -19,13 +19,31 @@ export const getGroqConfig = (): GroqConfig => {
 };
 
 export const hasGroqKey = (): boolean => {
-  return !!localStorage.getItem(GROQ_API_KEY_STORAGE);
+  try {
+    // Check if localStorage is available (for SSR environments)
+    if (typeof window === 'undefined' || !localStorage) return false;
+    
+    const key = localStorage.getItem(GROQ_API_KEY_STORAGE);
+    return !!key && key.trim() !== '';
+  } catch (error) {
+    console.error('Error checking for Groq API key:', error);
+    return false;
+  }
 };
 
 export const saveGroqKey = (apiKey: string): void => {
-  localStorage.setItem(GROQ_API_KEY_STORAGE, apiKey);
+  try {
+    localStorage.setItem(GROQ_API_KEY_STORAGE, apiKey);
+  } catch (error) {
+    console.error('Error saving Groq API key:', error);
+    throw new Error('Could not save Groq API key');
+  }
 };
 
 export const removeGroqKey = (): void => {
-  localStorage.removeItem(GROQ_API_KEY_STORAGE);
+  try {
+    localStorage.removeItem(GROQ_API_KEY_STORAGE);
+  } catch (error) {
+    console.error('Error removing Groq API key:', error);
+  }
 };

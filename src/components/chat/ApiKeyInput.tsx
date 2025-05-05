@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { saveGroqKey } from '@/integrations/groq/client';
+import { hasGroqKey, saveGroqKey } from '@/integrations/groq/client';
 import { toast } from 'sonner';
 
 interface ApiKeyInputProps {
@@ -12,6 +13,17 @@ interface ApiKeyInputProps {
 const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onKeySaved }) => {
   const [groqKey, setGroqKey] = useState<string>('');
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [keyStatus, setKeyStatus] = useState<'checking' | 'missing' | 'present'>('checking');
+
+  // Check if API key exists on mount
+  useEffect(() => {
+    const checkKey = () => {
+      const hasKey = hasGroqKey();
+      setKeyStatus(hasKey ? 'present' : 'missing');
+    };
+    
+    checkKey();
+  }, []);
 
   const handleSaveGroqKey = () => {
     if (!groqKey.trim()) {
@@ -21,6 +33,7 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onKeySaved }) => {
 
     try {
       saveGroqKey(groqKey);
+      setKeyStatus('present');
       toast.success('API key saved successfully');
       onKeySaved();
     } catch (error) {
@@ -39,19 +52,24 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onKeySaved }) => {
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
         </svg>
-        Groq API Key Required
+        {keyStatus === 'present' ? 'Update Groq API Key' : 'Groq API Key Required'}
       </div>
       
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-        To use Groq models, please enter your API key. You can get one from{' '}
-        <a 
-          href="https://console.groq.com/keys" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-        >
-          Groq Console
-        </a>.
+        {keyStatus === 'present' 
+          ? 'Your Groq API key is configured. You can update it if needed.' 
+          : 'To use Groq models, please enter your API key. You can get one from'}
+        {keyStatus === 'missing' && (
+          <a 
+            href="https://console.groq.com/keys" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 ml-1 underline"
+          >
+            Groq Console
+          </a>
+        )}
+        .
       </p>
       
       <div className="flex flex-col gap-2 sm:flex-row">

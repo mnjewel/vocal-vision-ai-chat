@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { hasGroqKey } from '@/integrations/groq/client';
-import { useAuthContext } from '@/components/AuthProvider';
 import { useSettingsStore } from '@/stores/settingsStore';
 import useChat from '@/hooks/useChat';
 import { ModelManager } from '@/services/ModelManager';
@@ -38,9 +37,6 @@ const ChatInterfaceRefactored: React.FC = () => {
   const [activeAPITab, setActiveAPITab] = useState<string>('groq');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPersonaSelector, setShowPersonaSelector] = useState<boolean>(false);
-  
-  // Get user from auth context
-  const { user } = useAuthContext();
   
   // Get settings from store
   const { defaultModel } = useSettingsStore();

@@ -55,7 +55,7 @@ export const useChat = () => {
     } else {
       // Create a new memory manager with a new session ID if none exists
       createNewSession().then(newSessionId => {
-        if (newSessionId) {
+        if (newSessionId !== null) {
           // Using the constructor properly
           memoryManagerRef.current = new MemoryManager();
         }
