@@ -1,5 +1,5 @@
 
-import { Message } from '@/types/chat';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -52,3 +52,4 @@ export const createGroqChatCompletion = async (request: GroqChatCompletionReques
     throw error;
   }
 };
+
