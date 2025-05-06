@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/components/AuthProvider';
@@ -170,13 +169,12 @@ export const useMessages = ({
         // Format messages for the API - Ensure role is one of the allowed types
         const apiMessages: GroqChatMessage[] = contextMessages.map(m => ({
           role: (m.role === 'user' || m.role === 'assistant' || m.role === 'system') 
-                ? m.role as "user" | "assistant" | "system"
-                : "user", // Type assertion to fix the issue
+                ? m.role 
+                : "user", // Fall back to user role if not a valid role type
           content: m.content
         }));
 
         // Check if the last message in the API payload is a user message
-        // This is critical to fix the "last message role must be 'user'" error
         if (apiMessages.length > 0 && apiMessages[apiMessages.length - 1].role !== 'user') {
           console.warn('Last message is not from user, adding user message to context');
           apiMessages.push({

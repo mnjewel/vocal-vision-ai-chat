@@ -1,8 +1,13 @@
 
-import { GroqChatMessage } from '@/types/chat';
-import { handleError } from '@/utils/errorHandler';
+import { Message } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+// Export the type that was previously only defined locally
+export interface GroqChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
 
 export interface GroqChatCompletionRequest {
   model: string;
