@@ -111,14 +111,17 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Fix for TS2322: Ensure sessionId is a string with type assertion
-            const validSessionId: string = sessionId;
-            await supabase.from('messages').insert({
-              id: userMessageId,
-              session_id: validSessionId,
-              role: 'user',
-              content: content
-            });
+            // Ensure sessionId is a string with proper type assertion and check
+            if (typeof sessionId === 'string') {
+              await supabase.from('messages').insert({
+                id: userMessageId,
+                session_id: sessionId, // Now we're sure this is a string
+                role: 'user',
+                content: content
+              });
+            } else {
+              console.warn('Session ID is not a string, skipping database save');
+            }
           } catch (error) {
             console.error('Failed to save message to Supabase:', error);
           }
@@ -225,14 +228,17 @@ export const useMessages = ({
         // Save to Supabase if logged in and sessionId exists
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Fix for TS2322 and TS2769: sessionId is guaranteed to be string here due to the if condition check
-            const validSessionId: string = sessionId;
-            await supabase.from('messages').insert({
-              id: assistantMessage.id,
-              session_id: validSessionId,
-              role: 'assistant',
-              content: response.content
-            });
+            // Ensure sessionId is a string with proper type check
+            if (typeof sessionId === 'string') {
+              await supabase.from('messages').insert({
+                id: assistantMessage.id,
+                session_id: sessionId,
+                role: 'assistant',
+                content: response.content
+              });
+            } else {
+              console.warn('Session ID is not a string, skipping database save');
+            }
           } catch (error) {
             console.error('Failed to save assistant message to Supabase:', error);
           }
