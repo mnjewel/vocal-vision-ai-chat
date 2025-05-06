@@ -111,11 +111,11 @@ export const useMessages = ({
         // Save to Supabase if logged in
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Ensure sessionId is a string with proper type assertion and check
+            // Type guard to ensure sessionId is a string
             if (typeof sessionId === 'string') {
               await supabase.from('messages').insert({
                 id: userMessageId,
-                session_id: sessionId, // Now we're sure this is a string
+                session_id: sessionId,
                 role: 'user',
                 content: content
               });
@@ -228,7 +228,7 @@ export const useMessages = ({
         // Save to Supabase if logged in and sessionId exists
         if (user && autoSaveMessages && sessionId) {
           try {
-            // Ensure sessionId is a string with proper type check
+            // Type guard to ensure sessionId is a string
             if (typeof sessionId === 'string') {
               await supabase.from('messages').insert({
                 id: assistantMessage.id,
