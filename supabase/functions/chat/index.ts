@@ -37,6 +37,9 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Processing request with model: ${model || 'llama-3.3-70b-versatile'}`);
+    console.log(`Number of messages: ${messages.length}`);
+
     // Initialize Groq client via OpenAI compatibility
     const groq = new OpenAI({
       apiKey: groqApiKey,
@@ -46,7 +49,7 @@ serve(async (req) => {
     // Choose default model if not specified
     const selectedModel = model || 'llama-3.3-70b-versatile';
     
-    console.log(`Processing request with model: ${selectedModel}`);
+    console.log(`Calling Groq API with model: ${selectedModel}`);
 
     // Call the API
     const response = await groq.chat.completions.create({
@@ -55,6 +58,8 @@ serve(async (req) => {
       temperature: 0.7,
       max_tokens: 1024,
     });
+
+    console.log("Received response from Groq API");
 
     // Return the response
     return new Response(
